@@ -47,7 +47,12 @@ suspend fun getPreviousUpdates(
 
 suspend fun discardPreviousUpdates(api: TelegramApi): Long? {
     val lastUpdate = api.getUnknownUpdates(offset = -1).singleOrNull()
-    return lastUpdate?.id?.plus(1)
+    if (lastUpdate != null) {
+        val offset = lastUpdate.id + 1
+        api.getUnknownUpdates(offset)
+        return offset
+    }
+    return null
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
