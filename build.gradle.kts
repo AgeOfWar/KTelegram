@@ -4,6 +4,9 @@ plugins {
     id("maven-publish")
 }
 
+group = "com.github.ageofwar"
+version = "0.1"
+
 repositories {
     mavenCentral()
     jcenter()
