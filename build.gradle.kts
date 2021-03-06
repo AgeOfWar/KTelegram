@@ -21,7 +21,7 @@ kotlin {
     //linuxX64()
 
     sourceSets {
-        val kotlinxSerializationVersion = "1.0.0"
+        val kotlinxSerializationVersion = "1.1.0"
         val ktorVersion = "1.5.1"
 
         all {
@@ -30,7 +30,6 @@ kotlin {
 
         val commonMain by getting {
             dependencies {
-                implementation(kotlin("reflect"))
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation("io.ktor:ktor-client-core:$ktorVersion")
             }
