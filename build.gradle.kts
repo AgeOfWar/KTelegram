@@ -1,7 +1,6 @@
 plugins {
     kotlin("multiplatform") version "1.4.30"
     kotlin("plugin.serialization") version "1.4.10"
-    id("maven-publish")
 }
 
 group = "com.github.ageofwar"
