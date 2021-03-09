@@ -156,3 +156,15 @@ inline fun Update.handlePollAnswer(block: (PollAnswer) -> Unit) {
         block(pollAnswer)
     }
 }
+
+inline fun Update.handleMyChatMemberUpdated(block: (ChatMemberUpdated) -> Unit) {
+    if (this is MyChatMemberUpdate) {
+        block(myChatMember)
+    }
+}
+
+inline fun Update.handleChatMemberUpdated(block: (ChatMemberUpdated) -> Unit) {
+    if (this is ChatMemberUpdate) {
+        block(chatMember)
+    }
+}

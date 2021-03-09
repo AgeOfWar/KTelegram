@@ -5,25 +5,27 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChatPermissions(
-    @SerialName("can_send_messages") val canSendMessage: Boolean,
-    @SerialName("can_send_media_messages") val canSendMediaMessages: Boolean,
-    @SerialName("can_send_polls") val canSendPolls: Boolean,
-    @SerialName("can_send_other_messages") val canSendOtherMessages: Boolean,
-    @SerialName("can_add_web_page_previews") val canAddWebPagePreviews: Boolean,
-    @SerialName("can_change_info") val canChangeInfo: Boolean,
-    @SerialName("can_invite_users") val canInviteUsers: Boolean,
+    @SerialName("can_send_messages") val canSendMessage: Boolean = false,
+    @SerialName("can_send_media_messages") val canSendMediaMessages: Boolean = false,
+    @SerialName("can_send_polls") val canSendPolls: Boolean = false,
+    @SerialName("can_send_other_messages") val canSendOtherMessages: Boolean = false,
+    @SerialName("can_add_web_page_previews") val canAddWebPagePreviews: Boolean = false,
+    @SerialName("can_change_info") val canChangeInfo: Boolean = false,
+    @SerialName("can_invite_users") val canInviteUsers: Boolean = false,
     @SerialName("can_pin_messages") val canPinMessages: Boolean = false,
 )
 
 @Serializable
 data class AdminPermissions(
-    @SerialName("is_anonymous") val isAnonymous: Boolean,
-    @SerialName("can_change_info") val canChangeInfo: Boolean,
-    @SerialName("can_post_messages") val canPostMessages: Boolean,
-    @SerialName("can_edit_messages") val canEditMessages: Boolean,
-    @SerialName("can_delete_messages") val canDeleteMessages: Boolean,
-    @SerialName("can_invite_users") val canInviteUsers: Boolean,
-    @SerialName("can_restrict_members") val canRestrictMembers: Boolean,
+    @SerialName("is_anonymous") val isAnonymous: Boolean = false,
+    @SerialName("can_manage_chat") val canManageChat: Boolean = false,
+    @SerialName("can_change_info") val canChangeInfo: Boolean = false,
+    @SerialName("can_post_messages") val canPostMessages: Boolean = false,
+    @SerialName("can_edit_messages") val canEditMessages: Boolean = false,
+    @SerialName("can_delete_messages") val canDeleteMessages: Boolean = false,
+    @SerialName("can_invite_users") val canInviteUsers: Boolean = false,
+    @SerialName("can_restrict_members") val canRestrictMembers: Boolean = false,
     @SerialName("can_pin_messages") val canPinMessages: Boolean = false,
-    @SerialName("can_promote_members") val canPromoteMembers: Boolean,
+    @SerialName("can_promote_members") val canPromoteMembers: Boolean = false,
+    @SerialName("can_manage_voice_chats") val canManageVoiceChats: Boolean = false
 )

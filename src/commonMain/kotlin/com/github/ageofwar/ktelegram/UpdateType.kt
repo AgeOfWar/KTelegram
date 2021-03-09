@@ -22,6 +22,8 @@ object UpdateTypeSerializer : KSerializer<KClass<out Update>> {
         "callback_query" -> CallbackQueryUpdate::class
         "poll" -> PollUpdate::class
         "poll_answer" -> PollAnswerUpdate::class
+        "my_chat_member" -> MyChatMemberUpdate::class
+        "chat_member" -> ChatMemberUpdate::class
         else -> throw SerializationException("Invalid type \"$type\"")
     }
 
@@ -52,5 +54,7 @@ internal fun <T : Update> KClass<out T>.toJsonString() = when (this) {
     CallbackQueryUpdate::class -> "callback_query"
     PollUpdate::class -> "poll"
     PollAnswerUpdate::class -> "poll_answer"
+    MyChatMemberUpdate::class -> "my_chat_member"
+    ChatMemberUpdate::class ->  "chat_member"
     else -> throw SerializationException("Invalid type ${Update::class}")
 }

@@ -3,6 +3,7 @@ package com.github.ageofwar.ktelegram
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
@@ -22,7 +23,7 @@ sealed class ChatMember {
                 "restricted" -> Restricted.serializer()
                 "left" -> Left.serializer()
                 "kicked" -> Kicked.serializer()
-                else -> throw SerializationException("Unknown or missing status for ChatMember")
+                else -> Member.serializer() // fallback serializer
             }
         }
     }
@@ -50,42 +51,43 @@ data class Administrator(
 
     object Serializer : KSerializer<Administrator> {
         override val descriptor = buildClassSerialDescriptor("administrator") {
-            element("status", String.serializer().descriptor)
-            element("user", Sender.serializer().descriptor)
-            element("custom_title", String.serializer().descriptor, isOptional = true)
-            element("can_be_edited", Boolean.serializer().descriptor)
-            element("is_anonymous", Boolean.serializer().descriptor)
-            element("can_change_info", Boolean.serializer().descriptor)
-            element("can_post_messages", Boolean.serializer().descriptor)
-            element("can_edit_messages", Boolean.serializer().descriptor)
-            element("can_delete_messages", Boolean.serializer().descriptor)
-            element("can_invite_users", Boolean.serializer().descriptor)
-            element("can_restrict_members", Boolean.serializer().descriptor)
-            element("can_pin_messages", Boolean.serializer().descriptor, isOptional = true)
-            element("can_promote_members", Boolean.serializer().descriptor)
+            element<String>("status")
+            element<Sender>("user")
+            element<String?>("custom_title")
+            element<Boolean?>("can_be_edited")
+            element<Boolean?>("is_anonymous")
+            element<Boolean?>("can_change_info")
+            element<Boolean?>("can_post_messages")
+            element<Boolean?>("can_edit_messages")
+            element<Boolean?>("can_delete_messages")
+            element<Boolean?>("can_invite_users")
+            element<Boolean?>("can_restrict_members")
+            element<Boolean?>("can_pin_messages")
+            element<Boolean?>("can_promote_members")
+            element<Boolean?>("can_manage_voice_chats")
+            element<Boolean?>("can_manage_chat")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
             var sender: Sender? = null
             var customTitle: String? = null
             var canBeEdited: Boolean? = null
-            var isAnonymous: Boolean? = null
-            var canChangeInfo: Boolean? = null
-            var canPostMessages: Boolean? = null
-            var canEditMessages: Boolean? = null
-            var canDeleteMessages: Boolean? = null
-            var canInviteUsers: Boolean? = null
-            var canRestrictMembers: Boolean? = null
+            var isAnonymous = false
+            var canChangeInfo = false
+            var canPostMessages = false
+            var canEditMessages = false
+            var canDeleteMessages = false
+            var canInviteUsers = false
+            var canRestrictMembers = false
             var canPinMessages = false
-            var canPromoteMembers: Boolean? = null
+            var canPromoteMembers = false
+            var canManageVoiceChats = false
+            var canManageChat = false
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
-                    0 -> check(
-                        decodeStringElement(
-                            descriptor,
-                            0
-                        ) == "administrator"
-                    ) { "Not an Administrator!" }
+                    0 -> check(decodeStringElement(descriptor, 0) == "administrator") {
+                        "Not an Administrator!"
+                    }
                     1 -> sender =
                         decodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
                     2 -> customTitle = decodeStringElement(descriptor, 2)
@@ -99,29 +101,35 @@ data class Administrator(
                     10 -> canRestrictMembers = decodeBooleanElement(descriptor, 10)
                     11 -> canPinMessages = decodeBooleanElement(descriptor, 11)
                     12 -> canPromoteMembers = decodeBooleanElement(descriptor, 12)
+                    13 -> canManageVoiceChats = decodeBooleanElement(descriptor, 13)
+                    14 -> canManageChat = decodeBooleanElement(descriptor, 14)
                     CompositeDecoder.DECODE_DONE -> break
                     else -> error("Unexpected index: $index")
                 }
             }
+            requireNotNull(sender)
+            requireNotNull(canBeEdited)
             Administrator(
-                sender!!,
+                sender,
                 customTitle,
-                canBeEdited!!,
+                canBeEdited,
                 AdminPermissions(
-                    isAnonymous!!,
-                    canChangeInfo!!,
-                    canPostMessages!!,
-                    canEditMessages!!,
-                    canDeleteMessages!!,
-                    canInviteUsers!!,
-                    canRestrictMembers!!,
+                    isAnonymous,
+                    canManageChat,
+                    canChangeInfo,
+                    canPostMessages,
+                    canEditMessages,
+                    canDeleteMessages,
+                    canInviteUsers,
+                    canRestrictMembers,
                     canPinMessages,
-                    canPromoteMembers!!
+                    canPromoteMembers,
+                    canManageVoiceChats,
                 )
             )
         }
 
-        override fun serialize(encoder: Encoder, value: Administrator) =
+        override fun serialize(encoder: Encoder, value: Administrator) {
             encoder.encodeStructure(descriptor) {
                 encodeStringElement(descriptor, 0, "administrator")
                 encodeSerializableElement(descriptor, 1, Sender.serializer(), value.sender)
@@ -137,6 +145,7 @@ data class Administrator(
                 encodeBooleanElement(descriptor, 11, value.permissions.canPinMessages)
                 encodeBooleanElement(descriptor, 12, value.permissions.canPromoteMembers)
             }
+        }
     }
 }
 
@@ -160,40 +169,37 @@ data class Restricted(
 
     object Serializer : KSerializer<Restricted> {
         override val descriptor = buildClassSerialDescriptor("restricted") {
-            element("status", String.serializer().descriptor)
-            element("user", Sender.serializer().descriptor)
-            element("is_member", Boolean.serializer().descriptor)
-            element("can_send_messages", Boolean.serializer().descriptor)
-            element("can_send_media_messages", Boolean.serializer().descriptor)
-            element("can_send_polls", Boolean.serializer().descriptor)
-            element("can_send_other_messages", Boolean.serializer().descriptor)
-            element("can_add_web_page_previews", Boolean.serializer().descriptor)
-            element("can_change_info", Boolean.serializer().descriptor)
-            element("can_invite_users", Boolean.serializer().descriptor)
-            element("can_pin_messages", Boolean.serializer().descriptor, isOptional = true)
-            element("until_date", Int.serializer().descriptor, isOptional = true)
+            element<String>("status")
+            element<Sender>("user")
+            element<Boolean>("is_member")
+            element<Boolean?>("can_send_messages")
+            element<Boolean?>("can_send_media_messages")
+            element<Boolean?>("can_send_polls")
+            element<Boolean?>("can_send_other_messages")
+            element<Boolean?>("can_add_web_page_previews")
+            element<Boolean?>("can_change_info")
+            element<Boolean?>("can_invite_users",)
+            element<Boolean?>("can_pin_messages")
+            element<Int?>("until_date")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
             var sender: Sender? = null
             var isMember: Boolean? = null
-            var canSendMessage: Boolean? = null
-            var canSendMediaMessages: Boolean? = null
-            var canSendPolls: Boolean? = null
-            var canSendOtherMessages: Boolean? = null
-            var canAddWebPagePreviews: Boolean? = null
-            var canChangeInfo: Boolean? = null
-            var canInviteUsers: Boolean? = null
+            var canSendMessage = false
+            var canSendMediaMessages = false
+            var canSendPolls = false
+            var canSendOtherMessages = false
+            var canAddWebPagePreviews = false
+            var canChangeInfo = false
+            var canInviteUsers = false
             var canPinMessages = false
             var untilDate: Int? = null
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
-                    0 -> check(
-                        decodeStringElement(
-                            descriptor,
-                            0
-                        ) == "restricted"
-                    ) { "Not a Restricted!" }
+                    0 -> check(decodeStringElement(descriptor, 0) == "restricted") {
+                        "Not a Restricted!"
+                    }
                     1 -> sender =
                         decodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
                     2 -> isMember = decodeBooleanElement(descriptor, 2)
@@ -210,24 +216,26 @@ data class Restricted(
                     else -> error("Unexpected index: $index")
                 }
             }
+            requireNotNull(sender)
+            requireNotNull(isMember)
             Restricted(
-                sender!!,
-                isMember!!,
+                sender,
+                isMember,
                 ChatPermissions(
-                    canSendMessage!!,
-                    canSendMediaMessages!!,
-                    canSendPolls!!,
-                    canSendOtherMessages!!,
-                    canAddWebPagePreviews!!,
-                    canChangeInfo!!,
-                    canInviteUsers!!,
+                    canSendMessage,
+                    canSendMediaMessages,
+                    canSendPolls,
+                    canSendOtherMessages,
+                    canAddWebPagePreviews,
+                    canChangeInfo,
+                    canInviteUsers,
                     canPinMessages
                 ),
                 untilDate
             )
         }
 
-        override fun serialize(encoder: Encoder, value: Restricted) =
+        override fun serialize(encoder: Encoder, value: Restricted) {
             encoder.encodeStructure(descriptor) {
                 encodeStringElement(descriptor, 0, "restricted")
                 encodeSerializableElement(descriptor, 1, Sender.serializer(), value.sender)
@@ -242,6 +250,7 @@ data class Restricted(
                 encodeBooleanElement(descriptor, 10, value.permissions.canPinMessages)
                 if (value.untilDate != null) encodeIntElement(descriptor, 11, value.untilDate)
             }
+        }
     }
 }
 

@@ -433,12 +433,18 @@ suspend fun TelegramApi.downloadFile(fileId: String): ByteArray {
     return download(file.path)
 }
 
-suspend fun TelegramApi.kickChatMember(chatId: ChatId, userId: Long, untilDate: Int? = null) {
+suspend fun TelegramApi.kickChatMember(
+    chatId: ChatId,
+    userId: Long,
+    untilDate: Int? = null,
+    revokeMessages: Boolean = false
+) {
     request<Boolean>(
         "kickChatMember", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
-            "until_date" to untilDate
+            "until_date" to untilDate,
+            "revoke_messages" to revokeMessages
         )
     )
 }
@@ -492,7 +498,9 @@ suspend fun TelegramApi.promoteChatMember(
             "can_invite_users" to permissions.canInviteUsers,
             "can_restrict_members" to permissions.canRestrictMembers,
             "can_pin_messages" to permissions.canPinMessages,
-            "can_promote_members" to permissions.canPromoteMembers
+            "can_promote_members" to permissions.canPromoteMembers,
+            "can_manage_voice_chats" to permissions.canManageVoiceChats,
+            "can_manage_chat" to permissions.canManageChat
         )
     )
 }
@@ -523,6 +531,42 @@ suspend fun TelegramApi.setChatPermissions(chatId: ChatId, permissions: ChatPerm
 suspend fun TelegramApi.exportChatInviteLink(chatId: ChatId) = request<String>(
     "exportChatInviteLink", mapOf(
         "chat_id" to (chatId.id ?: chatId.username)
+    )
+)
+
+suspend fun TelegramApi.createChatInviteLink(
+    chatId: ChatId,
+    expireDate: Int? = null,
+    numberLimit: Int? = null
+) = request<ChatInviteLink>(
+    "createChatInviteLink", mapOf(
+        "chat_id" to (chatId.id ?: chatId.username),
+        "expire_date" to expireDate,
+        "number_limit" to numberLimit
+    )
+)
+
+suspend fun TelegramApi.editChatInviteLink(
+    chatId: ChatId,
+    inviteLink: String,
+    expireDate: Int? = null,
+    numberLimit: Int? = null
+) = request<ChatInviteLink>(
+    "editChatInviteLink", mapOf(
+        "chat_id" to (chatId.id ?: chatId.username),
+        "invite_link" to inviteLink,
+        "expire_date" to expireDate,
+        "number_limit" to numberLimit
+    )
+)
+
+suspend fun TelegramApi.revokeChatInviteLink(
+    chatId: ChatId,
+    inviteLink: String,
+) = request<ChatInviteLink>(
+    "revokeChatInviteLink", mapOf(
+        "chat_id" to (chatId.id ?: chatId.username),
+        "invite_link" to inviteLink
     )
 )
 
