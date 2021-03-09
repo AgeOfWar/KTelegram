@@ -1,10 +1,11 @@
 plugins {
     kotlin("multiplatform") version "1.4.30"
-    kotlin("plugin.serialization") version "1.4.10"
+    kotlin("plugin.serialization") version "1.4.30"
+    maven
 }
 
 group = "com.github.ageofwar"
-version = "0.1"
+version = "0.2"
 
 repositories {
     mavenCentral()
@@ -14,9 +15,22 @@ repositories {
 kotlin {
     jvm() {
         withJava()
-        val jvmJar by tasks.getting(org.gradle.jvm.tasks.Jar::class) {
-            doFirst {
-                from(configurations.getByName("runtimeClasspath").map { if (it.isDirectory) it else zipTree(it) })
+        compilations {
+            val main by getting
+            val jvmJar by tasks.getting(org.gradle.jvm.tasks.Jar::class) {
+                archiveAppendix.set("")
+            }
+            tasks {
+                register<org.gradle.jvm.tasks.Jar>("buildFatJar") {
+                    archiveBaseName.set("${project.name}-fat-with-kotlin-stdlib")
+                    from(main.output.classesDirs, main.compileDependencyFiles.map { if (it.isDirectory) it else zipTree(it) })
+                    with(jvmJar as CopySpec)
+                }
+                register<org.gradle.jvm.tasks.Jar>("buildFatJarWithoutKotlinStdlib") {
+                    archiveBaseName.set("${project.name}-fat")
+                    from(main.output.classesDirs, main.compileDependencyFiles.filter { !it.name.startsWith("kotlin-stdlib") }.map { if (it.isDirectory) it else zipTree(it) })
+                    with(jvmJar as CopySpec)
+                }
             }
         }
     }
