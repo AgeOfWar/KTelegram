@@ -1,7 +1,7 @@
 plugins {
     kotlin("multiplatform") version "1.4.30"
     kotlin("plugin.serialization") version "1.4.30"
-    maven
+    `maven-publish`
 }
 
 group = "com.github.ageofwar"
@@ -17,19 +17,33 @@ kotlin {
         withJava()
         compilations {
             val main by getting
-            val jvmJar by tasks.getting(org.gradle.jvm.tasks.Jar::class) {
-                archiveAppendix.set("")
-            }
             tasks {
-                register<org.gradle.jvm.tasks.Jar>("buildFatJar") {
-                    archiveBaseName.set("${project.name}-fat-with-kotlin-stdlib")
+                val jvmJar by getting(org.gradle.jvm.tasks.Jar::class) {
+                    archiveAppendix.set("")
+                }
+                val metadataJar by getting(org.gradle.jvm.tasks.Jar::class) {
+                    archiveAppendix.set("")
+                    archiveClassifier.set("metadata")
+                }
+                val jvmSourcesJar by getting(org.gradle.jvm.tasks.Jar::class) {
+                    archiveAppendix.set("")
+                    archiveClassifier.set("sources")
+                }
+                val fatJar by registering(org.gradle.jvm.tasks.Jar::class) {
+                    archiveClassifier.set("fat-with-kotlin-stdlib")
                     from(main.output.classesDirs, main.compileDependencyFiles.map { if (it.isDirectory) it else zipTree(it) })
                     with(jvmJar as CopySpec)
                 }
-                register<org.gradle.jvm.tasks.Jar>("buildFatJarWithoutKotlinStdlib") {
-                    archiveBaseName.set("${project.name}-fat")
+                val fatJarWithoutKotlinStdlib by registering(org.gradle.jvm.tasks.Jar::class) {
+                    archiveClassifier.set("fat")
                     from(main.output.classesDirs, main.compileDependencyFiles.filter { !it.name.startsWith("kotlin-stdlib") }.map { if (it.isDirectory) it else zipTree(it) })
                     with(jvmJar as CopySpec)
+                }
+                jvmJar.dependsOn(fatJar, fatJarWithoutKotlinStdlib, jvmSourcesJar)
+                artifacts {
+                    add("archives", fatJarWithoutKotlinStdlib)
+                    add("archives", jvmSourcesJar)
+                    add("archives", metadataJar)
                 }
             }
         }
@@ -48,7 +62,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-                implementation("io.ktor:ktor-client-core:$ktorVersion")
+                api("io.ktor:ktor-client-core:$ktorVersion")
             }
         }
         val commonTest by getting {
@@ -59,17 +73,17 @@ kotlin {
         }
         /*val mingwX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:$ktorVersion")
+                api("io.ktor:ktor-client-curl:$ktorVersion")
             }
         }
         val linuxX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:$ktorVersion")
+                api("io.ktor:ktor-client-curl:$ktorVersion")
             }
         }*/
         val jvmMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-apache:$ktorVersion")
+                api("io.ktor:ktor-client-apache:$ktorVersion")
             }
         }
         val jvmTest by getting {
