@@ -537,12 +537,12 @@ suspend fun TelegramApi.exportChatInviteLink(chatId: ChatId) = request<String>(
 suspend fun TelegramApi.createChatInviteLink(
     chatId: ChatId,
     expireDate: Int? = null,
-    numberLimit: Int? = null
+    memberLimit: Int? = null
 ) = request<ChatInviteLink>(
     "createChatInviteLink", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "expire_date" to expireDate,
-        "number_limit" to numberLimit
+        "member_limit" to memberLimit
     )
 )
 
