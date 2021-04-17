@@ -2,7 +2,6 @@ package com.github.ageofwar.ktelegram.text
 
 import com.github.ageofwar.ktelegram.Text
 import com.github.ageofwar.ktelegram.text.TextToken.*
-import com.github.ageofwar.ktelegram.url
 
 fun Text.toMarkdown() = toString { it.toMarkdown() }
 

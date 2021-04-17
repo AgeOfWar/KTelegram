@@ -1,7 +1,6 @@
 package com.github.ageofwar.ktelegram.text
 
 import com.github.ageofwar.ktelegram.MessageEntity
-import com.github.ageofwar.ktelegram.Sender
 import com.github.ageofwar.ktelegram.Text
 
 sealed class TextToken(private val start: Boolean) {
@@ -18,7 +17,7 @@ sealed class TextToken(private val start: Boolean) {
     object StartCode : TextToken(true)
     data class StartPre(val language: String?) : TextToken(true)
     data class StartTextLink(val url: String?) : TextToken(true)
-    data class StartTextMention(val sender: Sender?) : TextToken(true)
+    data class StartTextMention(val sender: MessageEntity.TextMention.Sender?) : TextToken(true)
     object StartMention : TextToken(true)
     object StartHashtag : TextToken(true)
     object StartCashtag : TextToken(true)
@@ -33,7 +32,7 @@ sealed class TextToken(private val start: Boolean) {
     object EndCode : TextToken(false)
     data class EndPre(val language: String?) : TextToken(false)
     data class EndTextLink(val url: String?) : TextToken(false)
-    data class EndTextMention(val sender: Sender?) : TextToken(false)
+    data class EndTextMention(val sender: MessageEntity.TextMention.Sender?) : TextToken(false)
     object EndMention : TextToken(false)
     object EndHashtag : TextToken(false)
     object EndCashtag : TextToken(false)
@@ -194,7 +193,14 @@ fun List<TextToken>.toText(): Text {
                 }
                 val url = startToken.url ?: token.url
                 ?: throw TextParseException("Url not present in token $token")
-                MessageEntity.TextLink(offset, textBuilder.length - offset, url)
+                if (url.startsWith("tg://user?id=")) {
+                    val userId = url.substring("tg://user?id=".length).toLongOrNull()
+                    if (userId != null) {
+                        MessageEntity.TextMention(offset, textBuilder.length - offset, MessageEntity.TextMention.Sender(userId))
+                    } else {
+                        MessageEntity.TextLink(offset, textBuilder.length - offset, url)
+                    }
+                } else MessageEntity.TextLink(offset, textBuilder.length - offset, url)
             }
             is TextToken.EndTextMention -> {
                 if (startToken !is TextToken.StartTextMention) {

@@ -1,7 +1,16 @@
 package com.github.ageofwar.ktelegram
 
+import com.github.ageofwar.ktelegram.text.parseHtml
+import com.github.ageofwar.ktelegram.text.parseMarkdown
+import com.github.ageofwar.ktelegram.text.toHtml
+import com.github.ageofwar.ktelegram.text.toMarkdown
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable
 data class Text(
@@ -37,6 +46,26 @@ data class Text(
     }
 
     override fun toString() = text
+
+    object MarkdownSerializer : KSerializer<Text> {
+        override val descriptor = PrimitiveSerialDescriptor("markdown", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder) = Text.parseMarkdown(decoder.decodeString())
+
+        override fun serialize(encoder: Encoder, value: Text) {
+            encoder.encodeString(value.toMarkdown())
+        }
+    }
+
+    object HtmlSerializer : KSerializer<Text> {
+        override val descriptor = PrimitiveSerialDescriptor("html", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder) = Text.parseHtml(decoder.decodeString())
+
+        override fun serialize(encoder: Encoder, value: Text) {
+            encoder.encodeString(value.toHtml())
+        }
+    }
 
     companion object {
         val EMPTY = Text("")
@@ -97,12 +126,12 @@ data class Text(
             return textMention(mention.text, mention.sender)
         }
 
-        fun textMention(text: String, mention: Sender): Text {
-            return Text(text, MessageEntity.TextMention(0, text.length, mention))
+        fun textMention(text: String, mention: Long): Text {
+            return Text(text, MessageEntity.TextMention(0, text.length, MessageEntity.TextMention.Sender(mention)))
         }
 
         fun textMention(mention: Sender): Text {
-            return textMention(mention.name, mention)
+            return textMention(mention.name, mention.id)
         }
 
         fun botCommand(botCommand: String): Text {
@@ -201,6 +230,11 @@ sealed class MessageEntity {
         @SerialName("user") val sender: Sender
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+
+        @Serializable
+        data class Sender(val id: Long) {
+            val url get() = "tg://user?id=$id"
+        }
     }
 
     @Serializable
@@ -276,7 +310,7 @@ data class Link(
 @Serializable
 data class Mention(
     val text: String,
-    val sender: Sender
+    val sender: Long
 )
 
 fun Text.isCommand() =
@@ -300,14 +334,13 @@ fun Text.getEmails() = getEntities<MessageEntity.Email, String> { s, _ -> s }
 fun Text.getHashtags() = getEntities<MessageEntity.Hashtag, String> { s, _ -> s.substring(1) }
 fun Text.getMentions() = getEntities<MessageEntity.Mention, String> { s, _ -> s.substring(1) }
 fun Text.getTextMentions() =
-    getEntities<MessageEntity.TextMention, Mention> { s, mention -> Mention(s, mention.sender) }
+    getEntities<MessageEntity.TextMention, Mention> { s, mention -> Mention(s, mention.sender.id) }
 
 fun Text.getBotCommands() = getEntities<MessageEntity.BotCommand, String> { s, _ -> s.substring(1) }
 fun Text.getPhoneNumbers() = getEntities<MessageEntity.PhoneNumber, String> { s, _ -> s }
 fun Text.getCashtags() = getEntities<MessageEntity.Cashtag, String> { s, _ -> s.substring(1) }
 
 fun Text.getAllUrls() = getUrls() + getLinks().map { it.url }
-fun Text.getAllMentions() = getMentions() + getTextMentions().mapNotNull { it.sender.username }
 
 inline fun Text.trim(predicate: (Char) -> Boolean = Char::isWhitespace): Text {
     var startIndex = 0
