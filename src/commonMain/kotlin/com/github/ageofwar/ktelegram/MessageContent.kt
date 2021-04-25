@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 
-@Serializable
+@Serializable(MessageContent.Serializer::class)
 sealed class MessageContent<T : Message> {
     object Serializer : JsonContentPolymorphicSerializer<MessageContent<*>>(MessageContent::class) {
         override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out MessageContent<*>> {
@@ -34,6 +34,32 @@ sealed class MessageContent<T : Message> {
             }
         }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : JsonContentPolymorphicSerializer<MessageContent<*>>(MessageContent::class) {
+        override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out MessageContent<*>> {
+            val json = element.jsonObject
+            return when {
+                "text" in json -> TextContent.AlternateSerializer(textSerializer)
+                "latitude" in json -> if ("title" in json) VenueContent.serializer() else LocationContent.serializer()
+                "phone_number" in json -> ContactContent.serializer()
+                "photo" in json -> PhotoContent.AlternateSerializer(textSerializer)
+                "audio" in json -> AudioContent.AlternateSerializer(textSerializer)
+                "animation" in json -> AnimationContent.AlternateSerializer(textSerializer)
+                "document" in json -> DocumentContent.AlternateSerializer(textSerializer)
+                "sticker" in json -> StickerContent.serializer()
+                "video" in json -> VideoContent.AlternateSerializer(textSerializer)
+                "video_note" in json -> VideoNoteContent.serializer()
+                "voice" in json -> VoiceContent.AlternateSerializer(textSerializer)
+                "emoji" in json -> DiceContent.serializer()
+                "game_short_name" in json -> GameContent.serializer()
+                "question" in json -> PollContent.serializer()
+                else -> throw SerializationException("Unknown MessageContent")
+            }
+        }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable(TextContent.Serializer::class)
@@ -82,6 +108,37 @@ data class TextContent(
                 if (value.disableWebPagePreview) encodeBooleanElement(descriptor, 2, true)
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<TextContent> {
+        override val descriptor = buildClassSerialDescriptor("TextContent") {
+            element<String>("text")
+            element<Boolean?>("disable_web_page_preview")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var text: Text? = null
+            var disableWebPagePreview = false
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> text = decodeSerializableElement(descriptor, 0, textSerializer, text)
+                    1 -> disableWebPagePreview = decodeBooleanElement(descriptor, 2)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(text)
+            TextContent(text, disableWebPagePreview)
+        }
+
+        override fun serialize(encoder: Encoder, value: TextContent) =
+            encoder.encodeStructure(descriptor) {
+                encodeSerializableElement(descriptor, 0, textSerializer, value.text)
+                if (value.disableWebPagePreview) encodeBooleanElement(descriptor, 1, true)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable(PhotoContent.Serializer::class)
@@ -135,6 +192,38 @@ data class PhotoContent(
                 }
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<PhotoContent> {
+        override val descriptor = buildClassSerialDescriptor("PhotoContent") {
+            element<OutputFile>("photo")
+            element<Text?>("caption")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var photo: OutputFile? = null
+            var caption: Text? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> photo = decodeSerializableElement(descriptor, 0, OutputFile.serializer(), photo)
+                    1 -> caption = decodeSerializableElement(descriptor, 1, textSerializer, caption)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(photo)
+            PhotoContent(photo, caption)
+        }
+
+        override fun serialize(encoder: Encoder, value: PhotoContent) =
+            encoder.encodeStructure(descriptor) {
+                val (photo, caption) = value
+                encodeSerializableElement(descriptor, 0, OutputFile.serializer(), photo)
+                if (caption != null) encodeSerializableElement(descriptor, 1, textSerializer, caption)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable(AudioContent.Serializer::class)
@@ -214,6 +303,54 @@ data class AudioContent(
                 )
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<AudioContent> {
+        override val descriptor = buildClassSerialDescriptor("AudioContent") {
+            element<OutputFile>("audio")
+            element<Text?>("caption")
+            element<Int?>("duration")
+            element<String?>("performer")
+            element<String?>("title")
+            element<OutputFile?>("thumb")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var audio: OutputFile? = null
+            var caption: Text? = null
+            var duration: Int? = null
+            var performer: String? = null
+            var title: String? = null
+            var thumbnail: OutputFile? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> audio = decodeSerializableElement(descriptor, 0, OutputFile.serializer(), audio)
+                    1 -> caption = decodeSerializableElement(descriptor, 1, textSerializer, caption)
+                    2 -> duration = decodeIntElement(descriptor, 2)
+                    3 -> performer = decodeStringElement(descriptor, 3)
+                    4 -> title = decodeStringElement(descriptor, 4)
+                    5 -> thumbnail = decodeSerializableElement(descriptor, 5, OutputFile.serializer(), thumbnail)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(audio)
+            AudioContent(audio, caption, duration, performer, title, thumbnail)
+        }
+
+        override fun serialize(encoder: Encoder, value: AudioContent) =
+            encoder.encodeStructure(descriptor) {
+                val (audio, caption, duration, performer, title, thumbnail) = value
+                encodeSerializableElement(descriptor, 0, OutputFile.serializer(), audio)
+                if (caption != null) encodeSerializableElement(descriptor, 1, textSerializer, caption)
+                if (duration != null) encodeIntElement(descriptor, 2, duration)
+                if (performer != null) encodeStringElement(descriptor, 3, performer)
+                if (title != null) encodeStringElement(descriptor, 4, title)
+                if (thumbnail != null) encodeSerializableElement(descriptor, 5, OutputFile.serializer(), thumbnail)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable(AnimationContent.Serializer::class)
@@ -293,6 +430,56 @@ data class AnimationContent(
                 )
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<AnimationContent> {
+        override val descriptor = buildClassSerialDescriptor("AnimationContent") {
+            element<OutputFile>("animation")
+            element<Text?>("caption")
+            element<Int?>("duration")
+            element<Int?>("width")
+            element<Int?>("height")
+            element<OutputFile?>("thumb")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var animation: OutputFile? = null
+            var caption: Text? = null
+            var duration: Int? = null
+            var width: Int? = null
+            var height: Int? = null
+            var thumbnail: OutputFile? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> animation =
+                        decodeSerializableElement(descriptor, 0, OutputFile.serializer(), animation)
+                    1 -> caption = decodeSerializableElement(descriptor, 1, textSerializer, caption)
+                    3 -> duration = decodeIntElement(descriptor, 3)
+                    4 -> width = decodeIntElement(descriptor, 4)
+                    5 -> height = decodeIntElement(descriptor, 5)
+                    6 -> thumbnail =
+                        decodeSerializableElement(descriptor, 6, OutputFile.serializer(), thumbnail)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(animation)
+            AnimationContent(animation, caption, duration, width, height, thumbnail)
+        }
+
+        override fun serialize(encoder: Encoder, value: AnimationContent) =
+            encoder.encodeStructure(descriptor) {
+                val (animation, caption, duration, width, height, thumbnail) = value
+                encodeSerializableElement(descriptor, 0, OutputFile.serializer(), animation)
+                if (caption != null) encodeSerializableElement(descriptor, 1, textSerializer, caption)
+                if (duration != null) encodeIntElement(descriptor, 2, duration)
+                if (width != null) encodeIntElement(descriptor, 3, width)
+                if (height != null) encodeIntElement(descriptor, 4, height)
+                if (thumbnail != null) encodeSerializableElement(descriptor, 5, OutputFile.serializer(), thumbnail)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable(DocumentContent.Serializer::class)
@@ -362,6 +549,48 @@ data class DocumentContent(
                 if (disableContentTypeDetection) encodeBooleanElement(descriptor, 4, true)
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<DocumentContent> {
+        override val descriptor = buildClassSerialDescriptor("DocumentContent") {
+            element<OutputFile>("document")
+            element<Text?>("caption")
+            element<OutputFile?>("thumb")
+            element<Boolean?>("disable_content_type_detection")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var document: OutputFile? = null
+            var caption: Text? = null
+            var thumbnail: OutputFile? = null
+            var disableContentTypeDetection = false
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> document =
+                        decodeSerializableElement(descriptor, 0, OutputFile.serializer(), document)
+                    1 -> caption = decodeSerializableElement(descriptor, 1, textSerializer, caption)
+                    2 -> thumbnail =
+                        decodeSerializableElement(descriptor, 2, OutputFile.serializer(), thumbnail)
+                    3 -> disableContentTypeDetection = decodeBooleanElement(descriptor, 3)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(document)
+            DocumentContent(document, caption, thumbnail, disableContentTypeDetection)
+        }
+
+        override fun serialize(encoder: Encoder, value: DocumentContent) =
+            encoder.encodeStructure(descriptor) {
+                val (document, caption, thumbnail, disableContentTypeDetection) = value
+                encodeSerializableElement(descriptor, 0, OutputFile.serializer(), document)
+                if (caption != null) encodeSerializableElement(descriptor, 1, textSerializer, caption)
+                if (thumbnail != null) encodeSerializableElement(descriptor, 2, OutputFile.serializer(), thumbnail)
+                if (disableContentTypeDetection) encodeBooleanElement(descriptor, 3, true)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable
@@ -451,6 +680,59 @@ data class VideoContent(
                 if (supportsStreaming) encodeBooleanElement(descriptor, 7, true)
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<VideoContent> {
+        override val descriptor = buildClassSerialDescriptor("VideoContent") {
+            element<OutputFile>("video")
+            element<Text?>("caption")
+            element<Int?>("duration")
+            element<Int?>("width")
+            element<Int?>("height")
+            element<OutputFile?>("thumb")
+            element<Boolean?>("supports_streaming")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var video: OutputFile? = null
+            var caption: Text? = null
+            var duration: Int? = null
+            var width: Int? = null
+            var height: Int? = null
+            var thumbnail: OutputFile? = null
+            var supportsStreaming = false
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> video =
+                        decodeSerializableElement(descriptor, 0, OutputFile.serializer(), video)
+                    1 -> caption = decodeSerializableElement(descriptor, 1, textSerializer, caption)
+                    2 -> duration = decodeIntElement(descriptor, 2)
+                    3 -> width = decodeIntElement(descriptor, 3)
+                    4 -> height = decodeIntElement(descriptor, 4)
+                    5 -> thumbnail = decodeSerializableElement(descriptor, 5, OutputFile.serializer(), thumbnail)
+                    6 -> supportsStreaming = decodeBooleanElement(descriptor, 6)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(video)
+            VideoContent(video, caption, duration, width, height, thumbnail, supportsStreaming)
+        }
+
+        override fun serialize(encoder: Encoder, value: VideoContent) =
+            encoder.encodeStructure(descriptor) {
+                val (video, caption, duration, width, height, thumbnail, supportsStreaming) = value
+                encodeSerializableElement(descriptor, 0, OutputFile.serializer(), video)
+                if (caption != null) encodeSerializableElement(descriptor, 1, textSerializer, caption)
+                if (duration != null) encodeIntElement(descriptor, 2, duration)
+                if (width != null) encodeIntElement(descriptor, 3, width)
+                if (height != null) encodeIntElement(descriptor, 4, height)
+                if (thumbnail != null) encodeSerializableElement(descriptor, 5, OutputFile.serializer(), thumbnail)
+                if (supportsStreaming) encodeBooleanElement(descriptor, 6, true)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable
@@ -517,6 +799,42 @@ data class VoiceContent(
                 if (duration != null) encodeIntElement(descriptor, 3, duration)
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<VoiceContent> {
+        override val descriptor = buildClassSerialDescriptor("VoiceContent") {
+            element<OutputFile>("voice")
+            element<Text?>("caption")
+            element<Int?>("duration")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var voice: OutputFile? = null
+            var caption: Text? = null
+            var duration: Int? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> voice = decodeSerializableElement(descriptor, 0, OutputFile.serializer(), voice)
+                    1 -> caption = decodeSerializableElement(descriptor, 1, textSerializer, caption)
+                    2 -> duration = decodeIntElement(descriptor, 2)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(voice)
+            VoiceContent(voice, caption, duration)
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceContent) =
+            encoder.encodeStructure(descriptor) {
+                val (voice, caption, duration) = value
+                encodeSerializableElement(descriptor, 0, OutputFile.serializer(), voice)
+                if (caption != null) encodeSerializableElement(descriptor, 1, textSerializer, caption)
+                if (duration != null) encodeIntElement(descriptor, 2, duration)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
 }
 
 @Serializable

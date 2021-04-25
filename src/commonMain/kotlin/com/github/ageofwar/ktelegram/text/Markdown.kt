@@ -72,6 +72,7 @@ fun Text.Companion.parseMarkdown(string: String): Text {
                     if (startTokens.lastOrNull() is StartItalic) {
                         tokens += EndItalic
                         startTokens.removeLast()
+                        if (string.getOrNull(i + 1) == '\r') i++
                     } else {
                         tokens += StartItalic.also {
                             startTokens += it

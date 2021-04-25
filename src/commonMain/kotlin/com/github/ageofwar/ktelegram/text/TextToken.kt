@@ -295,7 +295,7 @@ fun List<TextToken>.toText(): Text {
         }
     }
 
-    return Text(textBuilder.toString(), entities.map { it!! })
+    return Text(textBuilder.toString(), entities.map { it ?: throw TextParseException("Unclosed token") })
 }
 
 class TextParseException(message: String) : RuntimeException(message)

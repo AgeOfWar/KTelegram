@@ -1,9 +1,6 @@
 package com.github.ageofwar.ktelegram
 
-import com.github.ageofwar.ktelegram.text.parseHtml
-import com.github.ageofwar.ktelegram.text.parseMarkdown
-import com.github.ageofwar.ktelegram.text.toHtml
-import com.github.ageofwar.ktelegram.text.toMarkdown
+import com.github.ageofwar.ktelegram.text.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,12 +13,8 @@ import kotlinx.serialization.encoding.Encoder
 data class Text(
     val text: String,
     val entities: List<MessageEntity> = emptyList()
-) : CharSequence {
+) : CharSequence by text {
     constructor(text: String, vararg entities: MessageEntity) : this(text, entities.toList())
-
-    override val length get() = text.length
-
-    override operator fun get(index: Int) = text[index]
 
     override fun subSequence(startIndex: Int, endIndex: Int): Text {
         if (startIndex == 0 && endIndex == text.length) return this
@@ -155,7 +148,8 @@ sealed class MessageEntity {
 
     val endIndex get() = offset + length
 
-    abstract fun move(offset: Int, length: Int): MessageEntity
+    abstract fun move(offset: Int = this.offset, length: Int = this.length): MessageEntity
+    abstract fun typeEquals(other: MessageEntity): Boolean
 
     @Serializable
     @SerialName("bold")
@@ -164,6 +158,7 @@ sealed class MessageEntity {
         override val length: Int
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is Bold
     }
 
     @Serializable
@@ -173,6 +168,7 @@ sealed class MessageEntity {
         override val length: Int
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is Italic
     }
 
     @Serializable
@@ -182,6 +178,7 @@ sealed class MessageEntity {
         override val length: Int
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is Underline
     }
 
     @Serializable
@@ -191,6 +188,7 @@ sealed class MessageEntity {
         override val length: Int
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is Strikethrough
     }
 
     @Serializable
@@ -200,6 +198,7 @@ sealed class MessageEntity {
         override val length: Int
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is Code
     }
 
     @Serializable
@@ -210,6 +209,7 @@ sealed class MessageEntity {
         val language: String?
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is Pre && other.language == language
     }
 
     @Serializable
@@ -220,6 +220,7 @@ sealed class MessageEntity {
         val url: String
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is TextLink && other.url == url
     }
 
     @Serializable
@@ -230,6 +231,7 @@ sealed class MessageEntity {
         @SerialName("user") val sender: Sender
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = other is TextMention && other.sender == sender
 
         @Serializable
         data class Sender(val id: Long) {
@@ -244,6 +246,7 @@ sealed class MessageEntity {
         override val length: Int,
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
     }
 
     @Serializable
@@ -253,6 +256,7 @@ sealed class MessageEntity {
         override val length: Int,
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
     }
 
     @Serializable
@@ -262,6 +266,7 @@ sealed class MessageEntity {
         override val length: Int,
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
     }
 
     @Serializable
@@ -271,6 +276,7 @@ sealed class MessageEntity {
         override val length: Int,
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
     }
 
     @Serializable
@@ -280,6 +286,7 @@ sealed class MessageEntity {
         override val length: Int,
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
     }
 
     @Serializable
@@ -289,6 +296,7 @@ sealed class MessageEntity {
         override val length: Int,
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
     }
 
     @Serializable
@@ -298,6 +306,7 @@ sealed class MessageEntity {
         override val length: Int,
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
     }
 }
 
@@ -342,6 +351,26 @@ fun Text.getCashtags() = getEntities<MessageEntity.Cashtag, String> { s, _ -> s.
 
 fun Text.getAllUrls() = getUrls() + getLinks().map { it.url }
 
+operator fun Text.plus(other: Text): Text {
+    if (isEmpty()) return other
+    if (other.isEmpty()) return this
+    return buildText {
+        append(this@plus)
+        append(other)
+    }
+}
+
+fun Text.replaceText(newText: String): Text {
+    val entities = buildList {
+        this@replaceText.entities.forEach {
+            if (it.offset == 0 && it.length == this@replaceText.length) {
+                add(it.move(0, newText.length))
+            }
+        }
+    }
+    return Text(newText, entities)
+}
+
 inline fun Text.trim(predicate: (Char) -> Boolean = Char::isWhitespace): Text {
     var startIndex = 0
     var endIndex = length - 1
@@ -365,4 +394,56 @@ inline fun Text.trim(predicate: (Char) -> Boolean = Char::isWhitespace): Text {
     }
 
     return subSequence(startIndex, endIndex + 1)
+}
+
+fun Text.replace(oldValue: String, newValue: String, ignoreCase: Boolean = false): Text = buildText {
+    var i = 0
+    var replaceIndex = this@replace.indexOf(oldValue, startIndex = i, ignoreCase = ignoreCase)
+    while (replaceIndex > -1) {
+        append(this@replace.subSequence(i, replaceIndex))
+        append(this@replace.subSequence(replaceIndex, replaceIndex + oldValue.length).replaceText(newValue))
+        i = replaceIndex + oldValue.length
+        replaceIndex = this@replace.indexOf(oldValue, startIndex = i, ignoreCase = ignoreCase)
+    }
+    append(this@replace.subSequence(i, this@replace.length))
+}
+
+fun Text.replace(oldValue: Char, newValue: Char, ignoreCase: Boolean = false): Text = buildText {
+    var i = 0
+    var replaceIndex = this@replace.indexOf(oldValue, startIndex = i, ignoreCase = ignoreCase)
+    while (replaceIndex > -1) {
+        append(this@replace.subSequence(i, replaceIndex))
+        append(this@replace.subSequence(replaceIndex, replaceIndex + 1).replaceText(newValue.toString()))
+        i = replaceIndex + 1
+        replaceIndex = this@replace.indexOf(oldValue, startIndex = i, ignoreCase = ignoreCase)
+    }
+    append(this@replace.subSequence(i, this@replace.length))
+}
+
+fun Text.replace(oldValue: String, newValue: Text, ignoreCase: Boolean = false): Text = buildText {
+    var i = 0
+    var replaceIndex = this@replace.indexOf(oldValue, startIndex = i, ignoreCase = ignoreCase)
+    while (replaceIndex > -1) {
+        append(this@replace.subSequence(i, replaceIndex))
+        append(newValue)
+        i = replaceIndex + oldValue.length
+        replaceIndex = this@replace.indexOf(oldValue, startIndex = i, ignoreCase = ignoreCase)
+    }
+    append(this@replace.subSequence(i, this@replace.length))
+}
+
+fun Text.replace(oldValue: Text, newValue: Text, ignoreCase: Boolean = false): Text = buildText {
+    var i = 0
+    var replaceIndex = this@replace.indexOf(oldValue.text, startIndex = i, ignoreCase = ignoreCase)
+    while (replaceIndex > -1) {
+        if (this@replace.subSequence(replaceIndex, replaceIndex + oldValue.length).entities == oldValue.entities) {
+            append(this@replace.subSequence(i, replaceIndex))
+            append(newValue)
+        } else {
+            append(this@replace.subSequence(i, replaceIndex + oldValue.length))
+        }
+        i = replaceIndex + oldValue.length
+        replaceIndex = this@replace.indexOf(oldValue.text, startIndex = i, ignoreCase = ignoreCase)
+    }
+    append(this@replace.subSequence(i, this@replace.length))
 }
