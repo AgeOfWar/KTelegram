@@ -65,6 +65,7 @@ sealed class Message : Id<Long> {
                 "voice_chat_ended" in json -> VoiceChatEndedMessage.serializer()
                 "voice_chat_participants_invited" in json -> VoiceChatParticipantsInvitedMessage.serializer()
                 "message_auto_delete_timer_changed" in json -> MessageAutoDeleteTimerChangedMessage.serializer()
+                "voice_chat_scheduled" in json -> VoiceChatScheduledMessage.serializer()
                 else -> UnknownMessage.serializer()
             }
         }
@@ -4211,6 +4212,92 @@ data class MessageAutoDeleteTimerChangedMessage(
                     17,
                     MessageAutoDeleteTimerChanged.serializer(),
                     messageAutoDeleteTimerChanged
+                )
+            }
+        }
+    }
+}
+
+@Serializable(MessageAutoDeleteTimerChangedMessage.Serializer::class)
+data class VoiceChatScheduledMessage(
+    override val id: Long,
+    override val sender: Sender,
+    override val date: Long = 0L,
+    override val chat: Chat,
+    val voiceChatScheduled: VoiceChatScheduled
+) : Message() {
+    override val replyToMessage: Nothing? get() = null
+    override val lastEditDate: Nothing? get() = null
+    override val viaBot: Nothing? get() = null
+    override val authorSignature: Nothing? get() = null
+    override val mediaGroupId: Nothing? get() = null
+    override val replyMarkup: Nothing? get() = null
+    override val forwardFrom: Nothing? get() = null
+    override val forwardFromMessageId: Nothing? get() = null
+    override val forwardSignature: Nothing? get() = null
+    override val forwardSenderName: Nothing? get() = null
+    override val forwardDate: Nothing? get() = null
+
+    override fun toMessageContent(): Nothing? = null
+
+    object Serializer : KSerializer<VoiceChatScheduledMessage> {
+        override val descriptor = buildClassSerialDescriptor("VoiceChatScheduledMessage") {
+            messageElements()
+            element<VoiceChatScheduled>("voice_chat_scheduled")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var id: Long? = null
+            var sender: Sender? = null
+            var date: Long = 0L
+            var chat: Chat? = null
+            var voiceChatScheduled: VoiceChatScheduled? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> id = decodeLongElement(descriptor, 0)
+                    1 -> sender =
+                        decodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
+                    2 -> sender =
+                        decodeSerializableElement(descriptor, 2, Sender.serializer(), sender)
+                    3 -> date = decodeLongElement(descriptor, 3)
+                    4 -> chat = decodeSerializableElement(descriptor, 4, Chat.serializer(), chat)
+                    17 -> voiceChatScheduled = decodeSerializableElement(
+                        descriptor,
+                        17,
+                        VoiceChatScheduled.serializer(),
+                        voiceChatScheduled
+                    )
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(id)
+            requireNotNull(sender)
+            requireNotNull(chat)
+            requireNotNull(voiceChatScheduled)
+            VoiceChatScheduledMessage(id, sender, date, chat, voiceChatScheduled)
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceChatScheduledMessage) {
+            encoder.encodeStructure(descriptor) {
+                val (id, sender, date, chat, voiceChatScheduled) = value
+                encodeLongElement(descriptor, 0, id)
+                when (sender) {
+                    is Anonymous -> encodeSerializableElement(
+                        descriptor,
+                        2,
+                        Sender.serializer(),
+                        sender
+                    )
+                    else -> encodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
+                }
+                encodeLongElement(descriptor, 3, date)
+                encodeSerializableElement(descriptor, 4, Chat.serializer(), chat)
+                encodeSerializableElement(
+                    descriptor,
+                    17,
+                    VoiceChatScheduled.serializer(),
+                    voiceChatScheduled
                 )
             }
         }

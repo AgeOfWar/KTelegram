@@ -9,5 +9,15 @@ data class InlineQuery(
     @SerialName("from") val sender: User,
     val location: Location? = null,
     val query: String,
-    val offset: String
+    val offset: String,
+    val chatType: ChatType? = null
 ) : Id<String>
+
+@Serializable
+enum class ChatType {
+    @SerialName("sender") SENDER,
+    @SerialName("private") PRIVATE,
+    @SerialName("group") GROUP,
+    @SerialName("supergroup") SUPERGROUP,
+    @SerialName("channel") CHANNEL,
+}
