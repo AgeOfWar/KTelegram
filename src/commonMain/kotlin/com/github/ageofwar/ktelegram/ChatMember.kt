@@ -1,7 +1,6 @@
 package com.github.ageofwar.ktelegram
 
 import kotlinx.serialization.*
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.*
