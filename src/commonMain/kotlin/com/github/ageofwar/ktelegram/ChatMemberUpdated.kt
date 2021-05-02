@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ChatMemberUpdated(
     val chat: Chat,
-    val sender: Sender,
+    @SerialName("from") val sender: Sender,
     val date: Int,
     @SerialName("old_chat_member") val oldChatMember: ChatMember,
     @SerialName("new_chat_member") val newChatMember: ChatMember,

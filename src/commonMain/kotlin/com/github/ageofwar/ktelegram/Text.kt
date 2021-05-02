@@ -319,7 +319,7 @@ data class Link(
 @Serializable
 data class Mention(
     val text: String,
-    val sender: Long
+    @SerialName("user") val sender: Long
 )
 
 fun Text.isCommand() =

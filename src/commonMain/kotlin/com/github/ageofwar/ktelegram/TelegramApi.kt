@@ -9,6 +9,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.delay
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -69,7 +70,11 @@ class TelegramApi private constructor(
             e.response.readText()
         }
         @Suppress("UNCHECKED_CAST")
-        return json.decodeFromString(json.serializersModule.serializer(returnType), response) as T
+        return try {
+            json.decodeFromString(json.serializersModule.serializer(returnType), response) as T
+        } catch (e: SerializationException) {
+            throw SerializationException("An error occurred while deserializing $response to $returnType", e)
+        }
     }
 
     suspend inline fun <reified T> request(
