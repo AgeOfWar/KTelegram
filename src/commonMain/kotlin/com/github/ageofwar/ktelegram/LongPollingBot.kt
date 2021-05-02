@@ -1,6 +1,5 @@
 package com.github.ageofwar.ktelegram
 
-import io.ktor.client.utils.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedSendChannelException
