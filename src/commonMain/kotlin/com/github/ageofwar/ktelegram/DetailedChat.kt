@@ -58,7 +58,7 @@ data class DetailedGroup(
 @SerialName("supergroup")
 data class DetailedSupergroup(
     override val id: Long,
-    override val username: String,
+    override val username: String? = null,
     override val title: String,
     @SerialName("chat_photo") override val chatPhoto: ChatPhoto? = null,
     override val description: String? = null,

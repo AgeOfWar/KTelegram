@@ -26,7 +26,7 @@ data class Group(
 @SerialName("supergroup")
 data class Supergroup(
     override val id: Long,
-    override val username: String,
+    override val username: String? = null,
     override val title: String
 ) : Chat(), Username, Title
 
