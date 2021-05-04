@@ -277,6 +277,25 @@ suspend fun TelegramApi.forwardMessage(
     )
 )
 
+suspend fun TelegramApi.sendTextMessage(
+    chatId: ChatId,
+    text: Text,
+    disableWebPagePreview: Boolean = false,
+    replyToMessageId: Long? = null,
+    replyMarkup: ReplyMarkup? = null,
+    disableNotification: Boolean = false,
+    allowSendingWithoutReply: Boolean = true
+) = sendMessage(chatId, TextContent(text, disableWebPagePreview), replyToMessageId, replyMarkup, disableNotification, allowSendingWithoutReply)
+
+suspend fun TelegramApi.sendTextMessage(
+    replyToMessageId: MessageId,
+    text: Text,
+    disableWebPagePreview: Boolean = false,
+    replyMarkup: ReplyMarkup? = null,
+    disableNotification: Boolean = false,
+    allowSendingWithoutReply: Boolean = true
+) = sendMessage(replyToMessageId, TextContent(text, disableWebPagePreview), replyMarkup, disableNotification, allowSendingWithoutReply)
+
 suspend fun TelegramApi.forwardMessage(
     chatId: ChatId,
     messageId: MessageId,
