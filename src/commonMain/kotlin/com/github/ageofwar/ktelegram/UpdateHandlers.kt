@@ -1,10 +1,7 @@
 package com.github.ageofwar.ktelegram
 
-suspend inline fun Update.handleCommand(
-    api: TelegramApi,
-    vararg names: String,
-    ignoreCase: Boolean = true,
-    block: (message: TextMessage, name: String, args: Text) -> Unit
+inline fun Update.handleCommand(
+    block: (message: TextMessage, name: String, botUsername: String?, args: Text) -> Unit
 ) = handleMessageOrPost { message ->
     if (message is TextMessage) {
         val text = message.text
@@ -15,16 +12,25 @@ suspend inline fun Update.handleCommand(
         val command = text.substring(1, length).split('@', limit = 2)
         val name = command.first()
         val botUsername = command.getOrNull(1)
-        if (names.isEmpty()) {
-            if (botUsername == null || botUsername == api.getMe().username) {
-                block(message, name, text.subSequence(length, text.length).trim())
-            }
-        } else {
-            names.forEach {
-                if (name.equals(it, ignoreCase)) {
-                    if (botUsername == null || botUsername == api.getMe().username) {
-                        block(message, name, text.subSequence(length, text.length).trim())
-                    }
+        block(message, name, botUsername, text.subSequence(length, text.length).trim())
+    }
+}
+
+suspend inline fun Update.handleCommand(
+    api: TelegramApi,
+    vararg names: String,
+    ignoreCase: Boolean = true,
+    block: (message: TextMessage, name: String, botUsername: String?, args: Text) -> Unit
+) = handleCommand { message, name, botUsername, args ->
+    if (names.isEmpty()) {
+        if (botUsername == null || botUsername == api.getMe().username) {
+            block(message, name, botUsername, args)
+        }
+    } else {
+        names.forEach {
+            if (name.equals(it, ignoreCase)) {
+                if (botUsername == null || botUsername == api.getMe().username) {
+                    block(message, name, botUsername, args)
                 }
             }
         }
