@@ -15,10 +15,16 @@ suspend inline fun Update.handleCommand(
         val command = text.substring(1, length).split('@', limit = 2)
         val name = command.first()
         val botUsername = command.getOrNull(1)
-        names.forEach {
-            if (name.equals(it, ignoreCase)) {
-                if (botUsername == null || botUsername == api.getMe().username) {
-                    block(message, name, text.subSequence(length, text.length).trim())
+        if (names.isEmpty()) {
+            if (botUsername == null || botUsername == api.getMe().username) {
+                block(message, name, text.subSequence(length, text.length).trim())
+            }
+        } else {
+            names.forEach {
+                if (name.equals(it, ignoreCase)) {
+                    if (botUsername == null || botUsername == api.getMe().username) {
+                        block(message, name, text.subSequence(length, text.length).trim())
+                    }
                 }
             }
         }
