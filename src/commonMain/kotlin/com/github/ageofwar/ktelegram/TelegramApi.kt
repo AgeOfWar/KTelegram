@@ -72,7 +72,7 @@ class TelegramApi private constructor(
         @Suppress("UNCHECKED_CAST")
         return try {
             json.decodeFromString(json.serializersModule.serializer(returnType), response) as T
-        } catch (e: SerializationException) {
+        } catch (e: Throwable) {
             throw SerializationException("An error occurred while deserializing $response to $returnType", e)
         }
     }

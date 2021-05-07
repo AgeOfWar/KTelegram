@@ -24,10 +24,10 @@ sealed class Sender : Id<Long>, Username, Name {
 @Serializable(User.Serializer::class)
 data class User(
     override val id: Long,
-    override val username: String?,
+    override val username: String? = null,
     @SerialName("first_name") override val firstName: String,
     @SerialName("last_name") override val lastName: String? = null,
-    @SerialName("language_code") val languageCode: String?
+    @SerialName("language_code") val languageCode: String? = null
 ) : Sender() {
     object Serializer : KSerializer<User> {
         override val descriptor = buildClassSerialDescriptor("User") {
@@ -60,7 +60,6 @@ data class User(
             }
             check(!isBot) { "Not a User!" }
             requireNotNull(id)
-            requireNotNull(username)
             requireNotNull(firstName)
             User(id, username, firstName, lastName, languageCode)
         }
