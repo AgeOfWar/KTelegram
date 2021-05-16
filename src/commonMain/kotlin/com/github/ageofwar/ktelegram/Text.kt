@@ -206,7 +206,7 @@ sealed class MessageEntity {
     data class Pre(
         override val offset: Int,
         override val length: Int,
-        val language: String?
+        val language: String? = null
     ) : MessageEntity() {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
         override fun typeEquals(other: MessageEntity) = other is Pre && other.language == language
