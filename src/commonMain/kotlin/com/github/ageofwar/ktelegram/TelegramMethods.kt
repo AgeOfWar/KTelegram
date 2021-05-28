@@ -3,6 +3,7 @@ package com.github.ageofwar.ktelegram
 import com.github.ageofwar.ktelegram.json.json
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
@@ -382,7 +383,7 @@ suspend fun TelegramApi.editMessageLiveLocation(
     location: Location,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<Boolean>(
+    request<JsonElement>(
         "editMessageLiveLocation", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -414,7 +415,7 @@ suspend fun TelegramApi.stopMessageLiveLocation(
     inlineMessageId: InlineMessageId,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<Boolean>(
+    request<JsonElement>(
         "stopMessageLiveLocation", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -754,7 +755,7 @@ suspend fun TelegramApi.editMessageText(
     disableWebPagePreview: Boolean = false,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<Boolean>(
+    request<JsonElement>(
         "editMessageText", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -787,7 +788,7 @@ suspend fun TelegramApi.editMessageCaption(
     text: Text,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<Boolean>(
+    request<JsonElement>(
         "editMessageCaption", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -820,7 +821,7 @@ suspend fun TelegramApi.editMessageMedia(
     media: OutputMedia,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<Boolean>(
+    request<JsonElement>(
         "editMessageMedia",
         mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
@@ -849,7 +850,7 @@ suspend fun TelegramApi.editMessageReplyMarkup(
     inlineMessageId: InlineMessageId,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<Boolean>(
+    request<JsonElement>(
         "editMessageReplyMarkup", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -1038,7 +1039,7 @@ suspend fun TelegramApi.setGameScore(
     disableEditMessage: Boolean = false,
     inlineMessageId: InlineMessageId
 ) {
-    request<Boolean>(
+    request<JsonElement>(
         "setGameScore", mapOf(
             "user_id" to userId,
             "score" to score,
