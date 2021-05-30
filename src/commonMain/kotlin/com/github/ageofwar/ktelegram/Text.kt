@@ -42,22 +42,20 @@ data class Text(
 
     object MarkdownSerializer : KSerializer<Text> {
         override val descriptor = PrimitiveSerialDescriptor("markdown", PrimitiveKind.STRING)
-
         override fun deserialize(decoder: Decoder) = Text.parseMarkdown(decoder.decodeString())
-
-        override fun serialize(encoder: Encoder, value: Text) {
-            encoder.encodeString(value.toMarkdown())
-        }
+        override fun serialize(encoder: Encoder, value: Text) = encoder.encodeString(value.toMarkdown())
     }
 
     object HtmlSerializer : KSerializer<Text> {
         override val descriptor = PrimitiveSerialDescriptor("html", PrimitiveKind.STRING)
-
         override fun deserialize(decoder: Decoder) = Text.parseHtml(decoder.decodeString())
+        override fun serialize(encoder: Encoder, value: Text) = encoder.encodeString(value.toHtml())
+    }
 
-        override fun serialize(encoder: Encoder, value: Text) {
-            encoder.encodeString(value.toHtml())
-        }
+    object PlainSerializer : KSerializer<Text> {
+        override val descriptor = PrimitiveSerialDescriptor("plain", PrimitiveKind.STRING)
+        override fun deserialize(decoder: Decoder) = Text(decoder.decodeString())
+        override fun serialize(encoder: Encoder, value: Text) = encoder.encodeString(value.text)
     }
 
     companion object {

@@ -60,6 +60,7 @@ sealed class MessageContent<T : Message> {
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable(TextContent.Serializer::class)
@@ -139,6 +140,7 @@ data class TextContent(
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable(PhotoContent.Serializer::class)
@@ -224,6 +226,7 @@ data class PhotoContent(
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable(AudioContent.Serializer::class)
@@ -351,6 +354,7 @@ data class AudioContent(
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable(AnimationContent.Serializer::class)
@@ -480,6 +484,7 @@ data class AnimationContent(
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable(DocumentContent.Serializer::class)
@@ -591,6 +596,7 @@ data class DocumentContent(
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable
@@ -733,6 +739,7 @@ data class VideoContent(
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable
@@ -835,6 +842,7 @@ data class VoiceContent(
 
     object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
     object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable
