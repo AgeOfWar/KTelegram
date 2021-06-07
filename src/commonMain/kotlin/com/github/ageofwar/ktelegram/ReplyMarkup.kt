@@ -13,7 +13,7 @@ import kotlinx.serialization.json.jsonObject
 sealed class ReplyMarkup {
     object Serializer : JsonContentPolymorphicSerializer<ReplyMarkup>(ReplyMarkup::class) {
         override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out ReplyMarkup> {
-            val json = element.jsonObject.also { println(it) }
+            val json = element.jsonObject
             return when {
                 "inline_keyboard" in json -> InlineKeyboard.serializer()
                 "force_reply" in json -> ForceReply.serializer()
