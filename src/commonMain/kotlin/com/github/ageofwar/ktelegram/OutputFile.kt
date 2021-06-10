@@ -12,12 +12,14 @@ data class OutputFile internal constructor(
     val fileId: String? = null,
     val url: String? = null,
     val fileName: String? = null,
-    val content: ByteArray? = null
+    val content: (() -> ByteArray)? = null
 ) {
     companion object {
         fun fromFileId(fileId: String) = OutputFile(fileId = fileId)
         fun fromUrl(url: String) = OutputFile(url = url)
         fun fromContent(fileName: String, content: ByteArray) =
+            OutputFile(fileName = fileName, content = { content })
+        fun fromContent(fileName: String, content: () -> ByteArray) =
             OutputFile(fileName = fileName, content = content)
     }
 

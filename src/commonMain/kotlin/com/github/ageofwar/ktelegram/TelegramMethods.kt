@@ -115,7 +115,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "photo" to (content.photo.fileId ?: content.photo.url),
                 "caption" to content.caption?.text,
                 "caption_entities" to content.caption?.entities?.toJson()
-            ), mapOf("photo" to content.photo.content)
+            ), mapOf("photo" to content.photo.content?.invoke())
         )
         is AudioContent -> request(
             "sendAudio", parameters + mapOf(
@@ -126,7 +126,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "performer" to content.performer,
                 "title" to content.title,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
-            ), mapOf("audio" to content.audio.content, "thumb" to content.thumbnail?.content)
+            ), mapOf("audio" to content.audio.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
         )
         is AnimationContent -> request(
             "sendAnimation",
@@ -139,7 +139,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "height" to content.height,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
             ),
-            mapOf("animation" to content.animation.content, "thumb" to content.thumbnail?.content)
+            mapOf("animation" to content.animation.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
         )
         is DocumentContent -> request(
             "sendDocument", parameters + mapOf(
@@ -148,12 +148,12 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "caption_entities" to content.caption?.entities?.toJson(),
                 "disable_content_type_detection" to content.disableContentTypeDetection,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
-            ), mapOf("document" to content.document.content, "thumb" to content.thumbnail?.content)
+            ), mapOf("document" to content.document.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
         )
         is StickerContent -> request(
             "sendSticker", parameters + mapOf(
                 "sticker" to (content.sticker.fileId ?: content.sticker.url),
-            ), mapOf("sticker" to content.sticker.content)
+            ), mapOf("sticker" to content.sticker.content?.invoke())
         )
         is VideoContent -> request(
             "sendVideo", parameters + mapOf(
@@ -165,7 +165,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "height" to content.height,
                 "supports_streaming" to content.supportsStreaming,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
-            ), mapOf("video" to content.video.content, "thumb" to content.thumbnail?.content)
+            ), mapOf("video" to content.video.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
         )
         is VideoNoteContent -> request(
             "sendVideoNote",
@@ -175,7 +175,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "length" to content.length,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
             ),
-            mapOf("video_note" to content.videoNote.content, "thumb" to content.thumbnail?.content)
+            mapOf("video_note" to content.videoNote.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
         )
         is VoiceContent -> request(
             "sendVoice", parameters + mapOf(
@@ -183,7 +183,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "caption" to content.caption?.text,
                 "caption_entities" to content.caption?.entities?.toJson(),
                 "duration" to content.duration,
-            ), mapOf("voice" to content.voice.content)
+            ), mapOf("voice" to content.voice.content?.invoke())
         )
         is ContactContent -> request(
             "sendMessage", parameters + mapOf(
@@ -344,7 +344,7 @@ suspend fun TelegramApi.sendMediaGroup(
     "disable_notification" to disableNotification,
     "reply_to_message_id" to replyToMessageId,
     "allow_sending_without_reply" to allowSendingWithoutReply
-), media.mapNotNull { it.media.content }.associateBy { it.toJson().removePrefix("attach://") })
+), media.mapNotNull { it.media.fileName?.to(it.media.content!!.invoke()) }.toMap())
 
 suspend fun TelegramApi.sendMediaGroup(
     replyToMessageId: MessageId,
@@ -358,7 +358,7 @@ suspend fun TelegramApi.sendMediaGroup(
         "disable_notification" to disableNotification,
         "reply_to_message_id" to replyToMessageId.messageId,
         "allow_sending_without_reply" to allowSendingWithoutReply
-    ), media.mapNotNull { it.media.fileName?.to(it.media.content) }.toMap()
+    ), media.mapNotNull { it.media.fileName?.to(it.media.content!!.invoke()) }.toMap()
 )
 
 suspend fun TelegramApi.editMessageLiveLocation(
@@ -813,7 +813,7 @@ suspend inline fun <reified T : Message> TelegramApi.editMessageMedia(
         "media" to json.encodeToString(media),
         "reply_markup" to if (replyMarkup != null) json.encodeToString(replyMarkup) else null
     ),
-    if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media.content) else emptyMap()
+    if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media.content?.invoke()) else emptyMap()
 )
 
 suspend fun TelegramApi.editMessageMedia(
@@ -831,7 +831,7 @@ suspend fun TelegramApi.editMessageMedia(
             "media" to json.encodeToString(media),
             "reply_markup" to replyMarkup?.toJson()
         ),
-        if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media.content) else emptyMap()
+        if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media.content?.invoke()) else emptyMap()
     )
 }
 
@@ -907,7 +907,7 @@ suspend fun TelegramApi.createNewStickerSet(
         "emojis" to emojis,
         "contains_masks" to containsMasks,
         "mask_position" to maskPosition?.toJson()
-    ), mapOf("png_sticker" to pngSticker.content)
+    ), mapOf("png_sticker" to pngSticker.content?.invoke())
 )
 
 suspend fun TelegramApi.createNewStickerSet(
@@ -943,7 +943,7 @@ suspend fun TelegramApi.addStickerToSet(
             "png_sticker" to (pngSticker.fileId ?: pngSticker.url),
             "emojis" to emojis,
             "mask_position" to maskPosition?.toJson()
-        ), mapOf("png_sticker" to pngSticker.content)
+        ), mapOf("png_sticker" to pngSticker.content?.invoke())
     )
 }
 
@@ -989,7 +989,7 @@ suspend fun TelegramApi.setStickerSetThumb(
             "user_id" to userId,
             "name" to name,
             "thumb" to (thumbnail?.fileId ?: thumbnail?.url)
-        ), mapOf("thumb" to thumbnail?.content)
+        ), mapOf("thumb" to thumbnail?.content?.invoke())
     )
 }
 
