@@ -715,23 +715,45 @@ suspend fun TelegramApi.answerCallbackQuery(
     )
 }
 
-suspend fun TelegramApi.setMyCommands(vararg commands: BotCommand) {
+suspend fun TelegramApi.setMyCommands(
+    scope: BotCommandScope = BotCommandScope.Default,
+    languageCode: String? = null,
+    vararg commands: BotCommand
+) {
     request<Boolean>(
         "setMyCommands", mapOf(
-            "commands" to commands.toJson()
+            "commands" to commands.toJson(),
+            "scope" to scope,
+            "language_code" to languageCode
         )
     )
 }
 
-suspend fun TelegramApi.setMyCommands(commands: List<BotCommand>) {
+suspend fun TelegramApi.setMyCommands(
+    scope: BotCommandScope = BotCommandScope.Default,
+    languageCode: String? = null,
+    commands: List<BotCommand>
+) {
     request<Boolean>(
         "setMyCommands", mapOf(
-            "commands" to commands.toJson()
+            "commands" to commands.toJson(),
+            "scope" to scope,
+            "language_code" to languageCode
         )
     )
 }
 
-suspend fun TelegramApi.getMyCommands() = request<List<BotCommand>>("getMyCommands")
+suspend fun TelegramApi.getMyCommands(scope: BotCommandScope = BotCommandScope.Default, languageCode: String? = null) =
+    request<List<BotCommand>>("getMyCommands", mapOf(
+        "scope" to scope,
+        "language_code" to languageCode
+    ))
+
+suspend fun TelegramApi.deleteMyCommands(scope: BotCommandScope = BotCommandScope.Default, languageCode: String? = null) =
+    request<List<BotCommand>>("deleteMyCommands", mapOf(
+        "scope" to scope,
+        "language_code" to languageCode
+    ))
 
 suspend inline fun <reified T : Message> TelegramApi.editMessageText(
     messageId: MessageId,

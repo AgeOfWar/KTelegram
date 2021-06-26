@@ -24,7 +24,7 @@ data class OutputFile internal constructor(
     }
 
     object Serializer : KSerializer<OutputFile> {
-        override val descriptor = PrimitiveSerialDescriptor("UploadFile", PrimitiveKind.STRING)
+        override val descriptor = PrimitiveSerialDescriptor("OutputFile", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): OutputFile {
             val file = decoder.decodeString()
