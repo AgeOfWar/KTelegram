@@ -126,6 +126,7 @@ data class InlineKeyboard(
 @Serializable
 data class Keyboard(
     val keyboard: Array<Array<out Button>>,
+    @SerialName("input_field_placeholder") val inputFieldPlaceholder: String? = null,
     @SerialName("resize_keyboard") val resize: Boolean = false,
     @SerialName("one_time_keyboard") val oneTime: Boolean = false,
     @SerialName("selective") val selective: Boolean = false,
@@ -210,7 +211,10 @@ data class KeyboardRemove(val selective: Boolean = false) : ReplyMarkup() {
 }
 
 @Serializable
-data class ForceReply(val selective: Boolean = false) : ReplyMarkup() {
+data class ForceReply(
+    @SerialName("input_field_placeholder") val inputFieldPlaceholder: String? = null,
+    val selective: Boolean = false
+) : ReplyMarkup() {
     @Required
     @SerialName("force_reply")
     private val forceReply = true

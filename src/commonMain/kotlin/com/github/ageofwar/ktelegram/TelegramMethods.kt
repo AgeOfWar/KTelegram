@@ -453,6 +453,7 @@ suspend fun TelegramApi.downloadFile(fileId: String): ByteArray {
     return download(file.path)
 }
 
+@Deprecated("old Telegram Bot API", ReplaceWith("banChatMember"))
 suspend fun TelegramApi.kickChatMember(
     chatId: ChatId,
     userId: Long,
@@ -461,6 +462,22 @@ suspend fun TelegramApi.kickChatMember(
 ) {
     request<Boolean>(
         "kickChatMember", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "user_id" to userId,
+            "until_date" to untilDate,
+            "revoke_messages" to revokeMessages
+        )
+    )
+}
+
+suspend fun TelegramApi.banChatMember(
+    chatId: ChatId,
+    userId: Long,
+    untilDate: Int? = null,
+    revokeMessages: Boolean = false
+) {
+    request<Boolean>(
+        "banChatMember", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
             "until_date" to untilDate,
@@ -671,8 +688,15 @@ suspend fun TelegramApi.getChatAdministrators(chatId: ChatId) = request<List<Cha
     )
 )
 
+@Deprecated("old Telegram Bot API", ReplaceWith("banChatMember"))
 suspend fun TelegramApi.getChatMembersCount(chatId: ChatId) = request<Int>(
     "getChatMembersCount", mapOf(
+        "chat_id" to (chatId.id ?: chatId.username)
+    )
+)
+
+suspend fun TelegramApi.getChatMemberCount(chatId: ChatId) = request<Int>(
+    "getChatMemberCount", mapOf(
         "chat_id" to (chatId.id ?: chatId.username)
     )
 )
