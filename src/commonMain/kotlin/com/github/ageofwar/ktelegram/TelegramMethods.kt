@@ -747,7 +747,7 @@ suspend fun TelegramApi.setMyCommands(
     request<Boolean>(
         "setMyCommands", mapOf(
             "commands" to commands.toJson(),
-            "scope" to scope,
+            "scope" to scope.toJson(),
             "language_code" to languageCode
         )
     )
@@ -761,7 +761,7 @@ suspend fun TelegramApi.setMyCommands(
     request<Boolean>(
         "setMyCommands", mapOf(
             "commands" to commands.toJson(),
-            "scope" to scope,
+            "scope" to scope.toJson(),
             "language_code" to languageCode
         )
     )
@@ -769,13 +769,13 @@ suspend fun TelegramApi.setMyCommands(
 
 suspend fun TelegramApi.getMyCommands(scope: BotCommandScope = BotCommandScope.Default, languageCode: String? = null) =
     request<List<BotCommand>>("getMyCommands", mapOf(
-        "scope" to scope,
+        "scope" to scope.toJson(),
         "language_code" to languageCode
     ))
 
 suspend fun TelegramApi.deleteMyCommands(scope: BotCommandScope = BotCommandScope.Default, languageCode: String? = null) =
     request<List<BotCommand>>("deleteMyCommands", mapOf(
-        "scope" to scope,
+        "scope" to scope.toJson(),
         "language_code" to languageCode
     ))
 

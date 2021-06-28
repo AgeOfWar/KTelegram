@@ -6,19 +6,13 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 
-interface UpdateHandler {
+fun interface UpdateHandler {
     suspend fun handle(update: Update)
 }
 
-inline fun UpdateHandler(crossinline handler: suspend (Update) -> Unit) = object : UpdateHandler {
-    override suspend fun handle(update: Update) = handler(update)
-}
-
-operator fun UpdateHandler.plus(other: UpdateHandler) = object : UpdateHandler {
-    override suspend fun handle(update: Update) {
-        this@plus.handle(update)
-        other.handle(update)
-    }
+operator fun UpdateHandler.plus(other: UpdateHandler) = UpdateHandler {
+    this@plus.handle(it)
+    other.handle(it)
 }
 
 suspend fun Update.handle(
