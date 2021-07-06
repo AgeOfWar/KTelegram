@@ -157,6 +157,18 @@ suspend inline fun Update.handleCallbackGame(
     }
 }
 
+inline fun Update.handleShippingQuery(block: (ShippingQuery) -> Unit) {
+    if (this is ShippingQueryUpdate) {
+        block(shippingQuery)
+    }
+}
+
+inline fun Update.handlePreCheckoutQuery(block: (PreCheckoutQuery) -> Unit) {
+    if (this is PreCheckoutQueryUpdate) {
+        block(preCheckoutQuery)
+    }
+}
+
 inline fun Update.handlePoll(block: (Poll) -> Unit) {
     if (this is PollUpdate) {
         block(poll)

@@ -30,6 +30,7 @@ sealed class MessageContent<T : Message> {
                 "emoji" in json -> DiceContent.serializer()
                 "game_short_name" in json -> GameContent.serializer()
                 "question" in json -> PollContent.serializer()
+                "prices" in json -> InvoiceContent.serializer()
                 else -> throw SerializationException("Unknown MessageContent")
             }
         }
@@ -1014,3 +1015,28 @@ data class LocationContent(val location: Location) : MessageContent<LocationMess
             encoder.encodeSerializableValue(Location.serializer(), value.location)
     }
 }
+
+@Serializable
+data class InvoiceContent(
+    val title: String,
+    val description: String,
+    val payload: String,
+    @SerialName("provider_token") val providerToken: String,
+    val currency: String,
+    val prices: List<LabeledPrice>,
+    @SerialName("max_tip_amount") val maxTipAmount: Long? = null,
+    @SerialName("suggested_tip_amounts") val suggestedTipAmounts: List<Long> = emptyList(),
+    @SerialName("start_parameter") val startParameter: String? = null,
+    @SerialName("provider_data") val providerData: String? = null,
+    @SerialName("photo_url") val photoUrl: String? = null,
+    @SerialName("photo_size") val photoSize: Int? = null,
+    @SerialName("photo_width") val photoWidth: Int? = null,
+    @SerialName("photo_height") val photoHeight: Int? = null,
+    @SerialName("need_name") val needName: Boolean = false,
+    @SerialName("need_phone_number") val needPhoneNumber: Boolean = false,
+    @SerialName("need_email") val needEmail: Boolean = false,
+    @SerialName("need_shipping_address") val needShippingAddress: Boolean = false,
+    @SerialName("send_phone_number_to_provider") val sendPhoneNumberToProvider: Boolean = false,
+    @SerialName("send_email_to_provider") val sendEmailToProvider: Boolean = false,
+    @SerialName("is_flexible") val flexible: Boolean = false
+) : MessageContent<InvoiceMessage>()

@@ -24,6 +24,8 @@ sealed class Update : Id<Long> {
                 "poll_answer" in json -> PollAnswerUpdate.serializer()
                 "my_chat_member" in json -> MyChatMemberUpdate.serializer()
                 "chat_member" in json -> ChatMemberUpdate.serializer()
+                "shipping_query" in json -> ShippingQueryUpdate.serializer()
+                "pre_checkout_query" in json -> PreCheckoutQueryUpdate.serializer()
                 else -> UnknownUpdate.serializer()
             }
         }
@@ -74,6 +76,18 @@ data class ChosenInlineResultUpdate(
 data class CallbackQueryUpdate(
     @SerialName("update_id") override val id: Long,
     @SerialName("callback_query") val callbackQuery: CallbackQuery
+) : Update()
+
+@Serializable
+data class ShippingQueryUpdate(
+    @SerialName("update_id") override val id: Long,
+    @SerialName("shipping_query") val shippingQuery: ShippingQuery
+) : Update()
+
+@Serializable
+data class PreCheckoutQueryUpdate(
+    @SerialName("update_id") override val id: Long,
+    @SerialName("pre_checkout_query") val preCheckoutQuery: PreCheckoutQuery
 ) : Update()
 
 @Serializable

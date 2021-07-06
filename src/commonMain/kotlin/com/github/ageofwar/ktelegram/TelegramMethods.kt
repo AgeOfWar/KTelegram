@@ -246,6 +246,31 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "proximity_alert_radius" to content.location.proximityAlertRadius
             )
         )
+        is InvoiceContent -> request(
+            "sendInvoice", parameters + mapOf(
+                "title" to content.title,
+                "description" to content.description,
+                "payload" to content.payload,
+                "provider_token" to content.providerToken,
+                "currency" to content.currency,
+                "prices" to content.prices.toJson(),
+                "max_tip_amount" to content.maxTipAmount,
+                "suggested_tip_amounts" to content.suggestedTipAmounts.toJson(),
+                "start_parameter" to content.startParameter,
+                "provider_data" to content.providerData,
+                "photo_url" to content.photoUrl,
+                "photo_size" to content.photoSize,
+                "photo_width" to content.photoWidth,
+                "photo_height" to content.photoHeight,
+                "need_name" to content.needName,
+                "need_phone_number" to content.needPhoneNumber,
+                "need_email" to content.needEmail,
+                "need_shipping_address" to content.needShippingAddress,
+                "send_phone_number_to_provider" to content.sendPhoneNumberToProvider,
+                "send_email_to_provider" to content.sendEmailToProvider,
+                "is_flexible" to content.flexible
+            )
+        )
     } as T
 }
 
@@ -1109,6 +1134,46 @@ suspend fun TelegramApi.getGameHighScores(
         "message_id" to inlineMessageId.messageId?.messageId,
         "chat_id" to (inlineMessageId.messageId?.chatId?.id
             ?: inlineMessageId.messageId?.chatId?.username)
+    )
+)
+
+suspend fun TelegramApi.answerShippingQuery(
+    shippingQueryId: String,
+    shippingOptions: List<ShippingOption>
+) = request<Boolean>(
+    "answerShippingQuery", mapOf(
+        "shipping_query_id" to shippingQueryId,
+        "ok" to true,
+        "shipping_options" to shippingOptions.toJson()
+    )
+)
+
+suspend fun TelegramApi.answerShippingQuery(
+    shippingQueryId: String,
+    errorMessage: String
+) = request<Boolean>(
+    "answerShippingQuery", mapOf(
+        "shipping_query_id" to shippingQueryId,
+        "ok" to false,
+        "error_message" to errorMessage
+    )
+)
+
+suspend fun TelegramApi.answerPreCheckoutQuery(preCheckoutQueryId: String) = request<Boolean>(
+    "answerPreCheckoutQuery", mapOf(
+        "pre_checkout_query_id" to preCheckoutQueryId,
+        "ok" to true
+    )
+)
+
+suspend fun TelegramApi.answerPreCheckoutQuery(
+    preCheckoutQueryId: String,
+    errorMessage: String
+) = request<Boolean>(
+    "answerPreCheckoutQuery", mapOf(
+        "pre_checkout_query_id" to preCheckoutQueryId,
+        "ok" to false,
+        "error_message" to errorMessage
     )
 )
 

@@ -2,6 +2,7 @@ package com.github.ageofwar.ktelegram
 
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.ClassSerialDescriptorBuilder
@@ -66,6 +67,8 @@ sealed class Message : Id<Long> {
                 "voice_chat_participants_invited" in json -> VoiceChatParticipantsInvitedMessage.serializer()
                 "message_auto_delete_timer_changed" in json -> MessageAutoDeleteTimerChangedMessage.serializer()
                 "voice_chat_scheduled" in json -> VoiceChatScheduledMessage.serializer()
+                "invoice" in json -> InvoiceMessage.serializer()
+                "successful_payment" in json -> SuccessfulPaymentMessage.serializer()
                 else -> UnknownMessage.serializer()
             }
         }
@@ -4469,6 +4472,52 @@ data class UnknownMessage(
             }
         }
     }
+}
+
+@Serializable
+data class InvoiceMessage(
+    override val id: Long,
+    override val sender: Sender,
+    override val date: Long = 0L,
+    override val chat: Chat,
+    override val replyToMessage: Message? = null,
+    override val viaBot: Bot? = null,
+    override val authorSignature: String? = null,
+    override val replyMarkup: InlineKeyboard? = null,
+    override val forwardFrom: Sender? = null,
+    override val forwardFromMessageId: Long? = null,
+    override val forwardSignature: String? = null,
+    override val forwardSenderName: String? = null,
+    override val forwardDate: Long? = null,
+    val invoice: Invoice
+) : Message() {
+    override val lastEditDate: Nothing? get() = null
+    override val mediaGroupId: Nothing? get() = null
+
+    override fun toMessageContent(): Nothing? = null
+}
+
+@Serializable
+data class SuccessfulPaymentMessage(
+    override val id: Long,
+    override val sender: Sender,
+    override val date: Long = 0L,
+    override val chat: Chat,
+    @SerialName("successful_payment") val successfulPayment: SuccessfulPayment
+) : Message() {
+    override val replyToMessage: Nothing? get() = null
+    override val viaBot: Nothing? get() = null
+    override val authorSignature: Nothing? get() = null
+    override val replyMarkup: Nothing? get() = null
+    override val forwardFrom: Nothing? get() = null
+    override val forwardFromMessageId: Nothing? get() = null
+    override val forwardSignature: Nothing? get() = null
+    override val forwardSenderName: Nothing? get() = null
+    override val forwardDate: Nothing? get() = null
+    override val lastEditDate: Nothing? get() = null
+    override val mediaGroupId: Nothing? get() = null
+
+    override fun toMessageContent(): Nothing? = null
 }
 
 val Message.chatId get() = chat.chatId

@@ -269,3 +269,5 @@ data class Kicked(
     @Required
     private val status = "kicked"
 }
+
+typealias Banned = Kicked
