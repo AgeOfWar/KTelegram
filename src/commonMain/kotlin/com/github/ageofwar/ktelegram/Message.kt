@@ -2,7 +2,6 @@ package com.github.ageofwar.ktelegram
 
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.ClassSerialDescriptorBuilder
@@ -4307,6 +4306,267 @@ data class VoiceChatScheduledMessage(
     }
 }
 
+@Serializable(InvoiceMessage.Serializer::class)
+data class InvoiceMessage(
+    override val id: Long,
+    override val sender: Sender,
+    override val date: Long = 0L,
+    override val chat: Chat,
+    override val replyToMessage: Message? = null,
+    override val viaBot: Bot? = null,
+    override val lastEditDate: Long? = null,
+    override val mediaGroupId: String? = null,
+    override val authorSignature: String? = null,
+    override val replyMarkup: InlineKeyboard? = null,
+    override val forwardFrom: Sender? = null,
+    override val forwardFromMessageId: Long? = null,
+    override val forwardSignature: String? = null,
+    override val forwardSenderName: String? = null,
+    override val forwardDate: Long? = null,
+    val invoice: Invoice
+) : Message() {
+
+    override fun toMessageContent(): Nothing? = null
+
+    object Serializer : KSerializer<InvoiceMessage> {
+        override val descriptor = buildClassSerialDescriptor("InvoiceMessage") {
+            messageElements()
+            element<Invoice>("invoice")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var id: Long? = null
+            var sender: Sender? = null
+            var date: Long = 0L
+            var chat: Chat? = null
+            var replyToMessage: Message? = null
+            var viaBot: Bot? = null
+            var lastEditDate: Long? = null
+            var mediaGroupId: String? = null
+            var authorSignature: String? = null
+            var forwardFrom: Sender? = null
+            var forwardFromMessageId: Long? = null
+            var forwardSignature: String? = null
+            var forwardSenderName: String? = null
+            var forwardDate: Long? = null
+            var replyMarkup: InlineKeyboard? = null
+            var invoice: Invoice? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> id = decodeLongElement(descriptor, 0)
+                    1 -> sender =
+                        decodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
+                    2 -> sender =
+                        decodeSerializableElement(descriptor, 2, Sender.serializer(), sender)
+                    3 -> date = decodeLongElement(descriptor, 3)
+                    4 -> chat = decodeSerializableElement(descriptor, 4, Chat.serializer(), chat)
+                    5 -> replyToMessage = decodeSerializableElement(
+                        descriptor,
+                        5,
+                        Message.serializer(),
+                        replyToMessage
+                    )
+                    6 -> viaBot = decodeSerializableElement(descriptor, 6, Bot.serializer(), viaBot)
+                    7 -> lastEditDate = decodeLongElement(descriptor, 7)
+                    8 -> mediaGroupId = decodeStringElement(descriptor, 8)
+                    9 -> authorSignature = decodeStringElement(descriptor, 9)
+                    10 -> forwardFrom =
+                        decodeSerializableElement(descriptor, 10, Sender.serializer(), forwardFrom)
+                    11 -> forwardFrom =
+                        decodeSerializableElement(descriptor, 11, Sender.serializer(), forwardFrom)
+                    12 -> forwardFromMessageId = decodeLongElement(descriptor, 12)
+                    13 -> forwardSignature = decodeStringElement(descriptor, 13)
+                    14 -> forwardSenderName = decodeStringElement(descriptor, 14)
+                    15 -> forwardDate = decodeLongElement(descriptor, 15)
+                    16 -> replyMarkup = decodeSerializableElement(
+                        descriptor,
+                        16,
+                        InlineKeyboard.serializer(),
+                        replyMarkup
+                    )
+                    17 -> invoice = decodeSerializableElement(descriptor, 17, Invoice.serializer(), invoice)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(id)
+            requireNotNull(sender)
+            requireNotNull(chat)
+            requireNotNull(invoice)
+            InvoiceMessage(
+                id,
+                sender,
+                date,
+                chat,
+                replyToMessage,
+                viaBot,
+                lastEditDate,
+                mediaGroupId,
+                authorSignature,
+                replyMarkup,
+                forwardFrom,
+                forwardFromMessageId,
+                forwardSignature,
+                forwardSenderName,
+                forwardDate,
+                invoice
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: InvoiceMessage) {
+            encoder.encodeStructure(descriptor) {
+                val (id, sender, date, chat, replyToMessage, viaBot, lastEditDate, mediaGroupId, authorSignature, replyMarkup, forwardFrom, forwardFromMessageId, forwardSignature, forwardSenderName, forwardDate, invoice) = value
+                encodeLongElement(descriptor, 0, id)
+                when (sender) {
+                    is Anonymous -> encodeSerializableElement(
+                        descriptor,
+                        2,
+                        Sender.serializer(),
+                        sender
+                    )
+                    else -> encodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
+                }
+                encodeLongElement(descriptor, 3, date)
+                encodeSerializableElement(descriptor, 4, Chat.serializer(), chat)
+                if (replyToMessage != null) encodeSerializableElement(
+                    descriptor,
+                    5,
+                    Message.serializer(),
+                    replyToMessage
+                )
+                if (viaBot != null) encodeSerializableElement(
+                    descriptor,
+                    6,
+                    Bot.serializer(),
+                    viaBot
+                )
+                if (lastEditDate != null) encodeLongElement(descriptor, 7, lastEditDate)
+                if (mediaGroupId != null) encodeStringElement(descriptor, 8, mediaGroupId)
+                if (authorSignature != null) encodeStringElement(descriptor, 9, authorSignature)
+                when (forwardFrom) {
+                    is User, is Bot -> encodeSerializableElement(
+                        descriptor,
+                        10,
+                        Sender.serializer(),
+                        forwardFrom
+                    )
+                    is Anonymous -> encodeSerializableElement(
+                        descriptor,
+                        11,
+                        Sender.serializer(),
+                        forwardFrom
+                    )
+                }
+                if (forwardFromMessageId != null) encodeLongElement(
+                    descriptor,
+                    12,
+                    forwardFromMessageId
+                )
+                if (forwardSignature != null) encodeStringElement(descriptor, 13, forwardSignature)
+                if (forwardSenderName != null) encodeStringElement(
+                    descriptor,
+                    14,
+                    forwardSenderName
+                )
+                if (forwardDate != null) encodeLongElement(descriptor, 15, forwardDate)
+                if (replyMarkup != null) encodeSerializableElement(
+                    descriptor,
+                    16,
+                    InlineKeyboard.serializer(),
+                    replyMarkup
+                )
+                encodeSerializableElement(descriptor, 17, Invoice.serializer(), invoice)
+            }
+        }
+    }
+}
+
+@Serializable(SuccessfulPaymentMessage.Serializer::class)
+data class SuccessfulPaymentMessage(
+    override val id: Long,
+    override val sender: Sender,
+    override val date: Long = 0L,
+    override val chat: Chat,
+    val successfulPayment: SuccessfulPayment
+) : Message() {
+    override val replyToMessage: Nothing? get() = null
+    override val viaBot: Nothing? get() = null
+    override val authorSignature: Nothing? get() = null
+    override val replyMarkup: Nothing? get() = null
+    override val forwardFrom: Nothing? get() = null
+    override val forwardFromMessageId: Nothing? get() = null
+    override val forwardSignature: Nothing? get() = null
+    override val forwardSenderName: Nothing? get() = null
+    override val forwardDate: Nothing? get() = null
+    override val lastEditDate: Nothing? get() = null
+    override val mediaGroupId: Nothing? get() = null
+
+    override fun toMessageContent(): Nothing? = null
+
+    object Serializer : KSerializer<SuccessfulPaymentMessage> {
+        override val descriptor = buildClassSerialDescriptor("SuccessfulPaymentMessage") {
+            messageElements()
+            element<SuccessfulPayment>("successful_payment")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var id: Long? = null
+            var sender: Sender? = null
+            var date: Long = 0L
+            var chat: Chat? = null
+            var successfulPayment: SuccessfulPayment? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> id = decodeLongElement(descriptor, 0)
+                    1 -> sender =
+                        decodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
+                    2 -> sender =
+                        decodeSerializableElement(descriptor, 2, Sender.serializer(), sender)
+                    3 -> date = decodeLongElement(descriptor, 3)
+                    4 -> chat = decodeSerializableElement(descriptor, 4, Chat.serializer(), chat)
+                    17 -> successfulPayment = decodeSerializableElement(
+                        descriptor,
+                        17,
+                        SuccessfulPayment.serializer(),
+                        successfulPayment
+                    )
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(id)
+            requireNotNull(sender)
+            requireNotNull(chat)
+            requireNotNull(successfulPayment)
+            SuccessfulPaymentMessage(id, sender, date, chat, successfulPayment)
+        }
+
+        override fun serialize(encoder: Encoder, value: SuccessfulPaymentMessage) {
+            encoder.encodeStructure(descriptor) {
+                val (id, sender, date, chat, successfulPayment) = value
+                encodeLongElement(descriptor, 0, id)
+                when (sender) {
+                    is Anonymous -> encodeSerializableElement(
+                        descriptor,
+                        2,
+                        Sender.serializer(),
+                        sender
+                    )
+                    else -> encodeSerializableElement(descriptor, 1, Sender.serializer(), sender)
+                }
+                encodeLongElement(descriptor, 3, date)
+                encodeSerializableElement(descriptor, 4, Chat.serializer(), chat)
+                encodeSerializableElement(
+                    descriptor,
+                    17,
+                    SuccessfulPayment.serializer(),
+                    successfulPayment
+                )
+            }
+        }
+    }
+}
+
 @Serializable(UnknownMessage.Serializer::class)
 data class UnknownMessage(
     override val id: Long,
@@ -4472,52 +4732,6 @@ data class UnknownMessage(
             }
         }
     }
-}
-
-@Serializable
-data class InvoiceMessage(
-    override val id: Long,
-    override val sender: Sender,
-    override val date: Long = 0L,
-    override val chat: Chat,
-    override val replyToMessage: Message? = null,
-    override val viaBot: Bot? = null,
-    override val authorSignature: String? = null,
-    override val replyMarkup: InlineKeyboard? = null,
-    override val forwardFrom: Sender? = null,
-    override val forwardFromMessageId: Long? = null,
-    override val forwardSignature: String? = null,
-    override val forwardSenderName: String? = null,
-    override val forwardDate: Long? = null,
-    val invoice: Invoice
-) : Message() {
-    override val lastEditDate: Nothing? get() = null
-    override val mediaGroupId: Nothing? get() = null
-
-    override fun toMessageContent(): Nothing? = null
-}
-
-@Serializable
-data class SuccessfulPaymentMessage(
-    override val id: Long,
-    override val sender: Sender,
-    override val date: Long = 0L,
-    override val chat: Chat,
-    @SerialName("successful_payment") val successfulPayment: SuccessfulPayment
-) : Message() {
-    override val replyToMessage: Nothing? get() = null
-    override val viaBot: Nothing? get() = null
-    override val authorSignature: Nothing? get() = null
-    override val replyMarkup: Nothing? get() = null
-    override val forwardFrom: Nothing? get() = null
-    override val forwardFromMessageId: Nothing? get() = null
-    override val forwardSignature: Nothing? get() = null
-    override val forwardSenderName: Nothing? get() = null
-    override val forwardDate: Nothing? get() = null
-    override val lastEditDate: Nothing? get() = null
-    override val mediaGroupId: Nothing? get() = null
-
-    override fun toMessageContent(): Nothing? = null
 }
 
 val Message.chatId get() = chat.chatId
