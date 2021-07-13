@@ -34,9 +34,6 @@ class TelegramApi private constructor(
     ): T {
         val response = try {
             httpClient.post("$apiUrl/bot$token/$method") {
-                timeout {
-                    requestTimeoutMillis = 3000
-                }
                 if (files.all { it.value == null }) {
                     parameters.forEach { (key, value) ->
                         parameter(key, value)
