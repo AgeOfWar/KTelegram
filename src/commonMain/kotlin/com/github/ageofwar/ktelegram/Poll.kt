@@ -41,7 +41,7 @@ sealed class Poll : Id<Long> {
         override val totalVoterCount: Int,
         override val isClosed: Boolean,
         override val isAnonymous: Boolean,
-        val correctOptionId: Int,
+        val correctOptionId: Int? = null,
         val explanation: Text? = null,
         override val openPeriod: Int? = null,
         override val closeDate: Int? = null
@@ -54,7 +54,7 @@ sealed class Poll : Id<Long> {
                 element<Int>("total_voter_count")
                 element<Boolean>("is_closed")
                 element<Boolean>("is_anonymous")
-                element<Int>("correct_option_id")
+                element<Int?>("correct_option_id")
                 element<String?>("explanation")
                 element<List<MessageEntity>?>("explanation_entities")
                 element<Int?>("open_period")
@@ -106,7 +106,6 @@ sealed class Poll : Id<Long> {
                 requireNotNull(totalVoterCount)
                 requireNotNull(isClosed)
                 requireNotNull(isAnonymous)
-                requireNotNull(correctOptionId)
                 val text = explanation?.let { Text(it, explanationEntities ?: emptyList()) }
                 Quiz(
                     id,
@@ -135,7 +134,7 @@ sealed class Poll : Id<Long> {
                     encodeIntElement(descriptor, 3, value.totalVoterCount)
                     encodeBooleanElement(descriptor, 4, value.isClosed)
                     encodeBooleanElement(descriptor, 5, value.isAnonymous)
-                    encodeIntElement(descriptor, 6, value.correctOptionId)
+                    if (value.correctOptionId != null) encodeIntElement(descriptor, 6, value.correctOptionId)
                     if (value.explanation != null) encodeStringElement(
                         descriptor,
                         7,

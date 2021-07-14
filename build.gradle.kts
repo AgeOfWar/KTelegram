@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.github.ageofwar"
-version = "1.7"
+version = "1.7.1"
 
 repositories {
     mavenCentral()

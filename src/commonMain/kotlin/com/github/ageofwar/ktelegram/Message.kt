@@ -2396,7 +2396,7 @@ data class PollMessage(
     override val forwardSenderName: String? = null,
     override val forwardDate: Long? = null
 ) : Message() {
-    override fun toMessageContent(): PollContent {
+    override fun toMessageContent(): PollContent? {
         return when (poll) {
             is Poll.Regular -> PollContent.Regular(
                 question = poll.question,
@@ -2407,7 +2407,7 @@ data class PollMessage(
                 isClosed = poll.isClosed,
                 allowsMultipleAnswers = poll.allowsMultipleAnswers
             )
-            is Poll.Quiz -> PollContent.Quiz(
+            is Poll.Quiz -> if (poll.correctOptionId != null) PollContent.Quiz(
                 question = poll.question,
                 options = poll.options.map { it.text },
                 isAnonymous = poll.isAnonymous,
@@ -2416,7 +2416,7 @@ data class PollMessage(
                 isClosed = poll.isClosed,
                 correctOption = poll.correctOptionId,
                 explanation = poll.explanation
-            )
+            ) else null
         }
     }
 
