@@ -68,7 +68,9 @@ data class ShippingQuery(
     val from: User,
     @SerialName("invoice_payload") val invoicePayload: String,
     @SerialName("shipping_address") val shippingAddress: ShippingAddress
-)
+) {
+    val sender get() = from
+}
 
 @Serializable
 data class PreCheckoutQuery(
@@ -79,7 +81,9 @@ data class PreCheckoutQuery(
     @SerialName("invoice_payload") val invoicePayload: String,
     @SerialName("shipping_option_id") val shippingOptionId: String? = null,
     @SerialName("order_info") val orderInfo: OrderInfo? = null
-)
+) {
+    val sender get() = from
+}
 
 @Serializable
 data class Currency(
@@ -136,7 +140,7 @@ data class Currency(
         }
 
         fun fromCode(code: String) = currencies[code]
-
+        fun getSupportedCurrencies(): Set<String> = currencies.keys.toSet()
         fun format(currency: String, amount: Long, native: Boolean = true) = fromCode(currency)?.format(amount, native)
     }
 }
