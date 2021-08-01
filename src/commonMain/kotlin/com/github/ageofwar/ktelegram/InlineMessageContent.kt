@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 
-@Serializable
+@Serializable(InlineMessageContent.Serializer::class)
 sealed class InlineMessageContent {
     object Serializer :
         JsonContentPolymorphicSerializer<InlineMessageContent>(InlineMessageContent::class) {
@@ -19,10 +19,28 @@ sealed class InlineMessageContent {
                 "message_text" in json -> InlineTextContent.serializer()
                 "latitude" in json -> if ("title" in json) InlineVenueContent.serializer() else InlineLocationContent.serializer()
                 "phone_number" in json -> InlineContactContent.serializer()
+                "prices" in json -> InlineInvoiceContent.serializer()
                 else -> throw SerializationException("Unknown InlineMessageContent")
             }
         }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : JsonContentPolymorphicSerializer<InlineMessageContent>(InlineMessageContent::class) {
+        override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out InlineMessageContent> {
+            val json = element.jsonObject
+            return when {
+                "message_text" in json -> InlineTextContent.AlternateSerializer(textSerializer)
+                "latitude" in json -> if ("title" in json) InlineVenueContent.serializer() else InlineLocationContent.serializer()
+                "phone_number" in json -> InlineContactContent.serializer()
+                "prices" in json -> InlineInvoiceContent.serializer()
+                else -> throw SerializationException("Unknown InlineMessageContent")
+            }
+        }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable(InlineTextContent.Serializer::class)
@@ -71,6 +89,38 @@ data class InlineTextContent(
                 if (value.disableWebPagePreview) encodeBooleanElement(descriptor, 2, true)
             }
     }
+
+    open class AlternateSerializer(private val textSerializer: KSerializer<Text>) : KSerializer<InlineTextContent> {
+        override val descriptor = buildClassSerialDescriptor("InlineTextContent") {
+            element<String>("text")
+            element<Boolean?>("disable_web_page_preview")
+        }
+
+        override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
+            var text: Text? = null
+            var disableWebPagePreview = false
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> text = decodeSerializableElement(descriptor, 0, textSerializer, text)
+                    1 -> disableWebPagePreview = decodeBooleanElement(descriptor, 2)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            requireNotNull(text)
+            InlineTextContent(text, disableWebPagePreview)
+        }
+
+        override fun serialize(encoder: Encoder, value: InlineTextContent) =
+            encoder.encodeStructure(descriptor) {
+                encodeSerializableElement(descriptor, 0, textSerializer, value.text)
+                if (value.disableWebPagePreview) encodeBooleanElement(descriptor, 1, true)
+            }
+    }
+
+    object MarkdownSerializer : AlternateSerializer(Text.MarkdownSerializer)
+    object HtmlSerializer : AlternateSerializer(Text.HtmlSerializer)
+    object PlainSerializer : AlternateSerializer(Text.PlainSerializer)
 }
 
 @Serializable(InlineLocationContent.Serializer::class)
