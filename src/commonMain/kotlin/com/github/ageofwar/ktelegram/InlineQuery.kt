@@ -10,7 +10,7 @@ data class InlineQuery(
     val location: Location? = null,
     val query: String,
     val offset: String,
-    val chatType: ChatType? = null
+    @SerialName("chat_type") val chatType: ChatType? = null
 ) : Id<String>
 
 @Serializable
