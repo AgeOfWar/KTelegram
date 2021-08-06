@@ -14,7 +14,7 @@ suspend fun TelegramApi.getUpdates(
     limit: Int? = null,
     timeout: Int? = null,
     vararg allowedUpdates: KClass<out Update>
-) = request<Array<Update>>(
+) = call<Array<Update>>(
     "getUpdates", mapOf(
         "offset" to offset,
         "lmiMit" to limit,
@@ -28,7 +28,7 @@ suspend fun TelegramApi.getUpdatesAsList(
     limit: Int? = null,
     timeout: Int? = null,
     vararg allowedUpdates: KClass<out Update>
-) = request<List<Update>>(
+) = call<List<Update>>(
     "getUpdates", mapOf(
         "offset" to offset,
         "lmiMit" to limit,
@@ -42,7 +42,7 @@ suspend fun TelegramApi.getUnknownUpdates(
     limit: Int? = null,
     timeout: Int? = null,
     vararg allowedUpdates: KClass<out Update>
-) = request<Array<UnknownUpdate>>(
+) = call<Array<UnknownUpdate>>(
     "getUpdates", mapOf(
         "offset" to offset,
         "lmiMit" to limit,
@@ -51,6 +51,26 @@ suspend fun TelegramApi.getUnknownUpdates(
     )
 )
 
+suspend fun TelegramApi.setWebhook(
+    url: String,
+    certificate: OutputFile,
+    ipAddress: String? = null,
+    maxConnections: Int = 40,
+    dropPendingUpdates: Boolean = false,
+    vararg allowedUpdates: KClass<out Update>
+) {
+    call<Boolean>(
+        "setWebhook", mapOf(
+            "url" to url,
+            "ip_address" to ipAddress,
+            "max_connections" to maxConnections,
+            "allowed_updates" to allowedUpdates.map { it.toJsonString() }.toJson(),
+            "drop_pending_updates" to dropPendingUpdates
+        ), mapOf("certificate" to certificate)
+    )
+}
+
+@Deprecated("Use TelegramApi.setWebhook", ReplaceWith("TelegramApi.setWebhook"))
 suspend fun TelegramApi.setWebhook(
     url: String,
     certificate: ByteArray,
@@ -71,19 +91,19 @@ suspend fun TelegramApi.setWebhook(
 }
 
 suspend fun TelegramApi.deleteWebhook(dropPendingUpdates: Boolean = false) {
-    request<Boolean>("setWebhook", mapOf("drop_pending_updates" to dropPendingUpdates))
+    call<Boolean>("setWebhook", mapOf("drop_pending_updates" to dropPendingUpdates))
 }
 
-suspend fun TelegramApi.getWebhookInfo() = request<WebhookInfo>("getWebhookInfo")
+suspend fun TelegramApi.getWebhookInfo() = call<WebhookInfo>("getWebhookInfo")
 
-suspend fun TelegramApi.getMe() = request<DetailedBot>("getMe")
+suspend fun TelegramApi.getMe() = call<DetailedBot>("getMe")
 
 suspend fun TelegramApi.logOut() {
-    request<Boolean>("logOut")
+    call<Boolean>("logOut")
 }
 
 suspend fun TelegramApi.closeBot() {
-    request<Boolean>("close")
+    call<Boolean>("close")
 }
 
 suspend fun <T : Message> TelegramApi.sendMessage(
@@ -103,21 +123,21 @@ suspend fun <T : Message> TelegramApi.sendMessage(
     )
     @Suppress("UNCHECKED_CAST")
     return when (content) {
-        is TextContent -> request<Message>(
+        is TextContent -> call<Message>(
             "sendMessage", parameters + mapOf(
                 "text" to content.text.text,
                 "entities" to content.text.entities.toJson(),
                 "disable_web_page_preview" to content.disableWebPagePreview
             )
         )
-        is PhotoContent -> request(
+        is PhotoContent -> call(
             "sendPhoto", parameters + mapOf(
                 "photo" to (content.photo.fileId ?: content.photo.url),
                 "caption" to content.caption?.text,
                 "caption_entities" to content.caption?.entities?.toJson()
-            ), mapOf("photo" to content.photo.content?.invoke())
+            ), mapOf("photo" to content.photo)
         )
-        is AudioContent -> request(
+        is AudioContent -> call(
             "sendAudio", parameters + mapOf(
                 "audio" to (content.audio.fileId ?: content.audio.url),
                 "caption" to content.caption?.text,
@@ -126,9 +146,9 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "performer" to content.performer,
                 "title" to content.title,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
-            ), mapOf("audio" to content.audio.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
+            ), mapOf("audio" to content.audio, "thumb" to content.thumbnail)
         )
-        is AnimationContent -> request(
+        is AnimationContent -> call(
             "sendAnimation",
             parameters + mapOf(
                 "animation" to (content.animation.fileId ?: content.animation.url),
@@ -139,23 +159,23 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "height" to content.height,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
             ),
-            mapOf("animation" to content.animation.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
+            mapOf("animation" to content.animation, "thumb" to content.thumbnail)
         )
-        is DocumentContent -> request(
+        is DocumentContent -> call(
             "sendDocument", parameters + mapOf(
                 "document" to (content.document.fileId ?: content.document.url),
                 "caption" to content.caption?.text,
                 "caption_entities" to content.caption?.entities?.toJson(),
                 "disable_content_type_detection" to content.disableContentTypeDetection,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
-            ), mapOf("document" to content.document.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
+            ), mapOf("document" to content.document, "thumb" to content.thumbnail)
         )
-        is StickerContent -> request(
+        is StickerContent -> call(
             "sendSticker", parameters + mapOf(
                 "sticker" to (content.sticker.fileId ?: content.sticker.url),
-            ), mapOf("sticker" to content.sticker.content?.invoke())
+            ), mapOf("sticker" to content.sticker)
         )
-        is VideoContent -> request(
+        is VideoContent -> call(
             "sendVideo", parameters + mapOf(
                 "video" to (content.video.fileId ?: content.video.url),
                 "caption" to content.caption?.text,
@@ -165,9 +185,9 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "height" to content.height,
                 "supports_streaming" to content.supportsStreaming,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
-            ), mapOf("video" to content.video.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
+            ), mapOf("video" to content.video, "thumb" to content.thumbnail)
         )
-        is VideoNoteContent -> request(
+        is VideoNoteContent -> call(
             "sendVideoNote",
             parameters + mapOf(
                 "video_note" to (content.videoNote.fileId ?: content.videoNote.url),
@@ -175,17 +195,17 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "length" to content.length,
                 "thumb" to (content.thumbnail?.fileId ?: content.thumbnail?.url)
             ),
-            mapOf("video_note" to content.videoNote.content?.invoke(), "thumb" to content.thumbnail?.content?.invoke())
+            mapOf("video_note" to content.videoNote, "thumb" to content.thumbnail)
         )
-        is VoiceContent -> request(
+        is VoiceContent -> call(
             "sendVoice", parameters + mapOf(
                 "voice" to (content.voice.fileId ?: content.voice.url),
                 "caption" to content.caption?.text,
                 "caption_entities" to content.caption?.entities?.toJson(),
                 "duration" to content.duration,
-            ), mapOf("voice" to content.voice.content?.invoke())
+            ), mapOf("voice" to content.voice)
         )
-        is ContactContent -> request(
+        is ContactContent -> call(
             "sendMessage", parameters + mapOf(
                 "phone_number" to content.phoneNumber,
                 "first_name" to content.firstName,
@@ -193,12 +213,12 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "vcard" to content.vcard
             )
         )
-        is DiceContent -> request("sendDice", parameters + mapOf("emoji" to content.emoji))
-        is GameContent -> request(
+        is DiceContent -> call("sendDice", parameters + mapOf("emoji" to content.emoji))
+        is GameContent -> call(
             "sendGame",
             parameters + mapOf("game_short_name" to content.gameShortName)
         )
-        is PollContent.Regular -> request(
+        is PollContent.Regular -> call(
             "sendPoll", parameters + mapOf(
                 "question" to content.question,
                 "options" to content.options.toJson(),
@@ -210,7 +230,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "is_closed" to content.isClosed
             )
         )
-        is PollContent.Quiz -> request(
+        is PollContent.Quiz -> call(
             "sendPoll", parameters + mapOf(
                 "question" to content.question,
                 "options" to content.options.toJson(),
@@ -224,7 +244,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "is_closed" to content.isClosed
             )
         )
-        is VenueContent -> request(
+        is VenueContent -> call(
             "sendVenue", parameters + mapOf(
                 "latitude" to content.venue.location.latitude,
                 "longitude" to content.venue.location.longitude,
@@ -236,7 +256,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "google_place_type" to content.venue.googlePlaceType
             )
         )
-        is LocationContent -> request(
+        is LocationContent -> call(
             "sendLocation", parameters + mapOf(
                 "latitude" to content.location.latitude,
                 "longitude" to content.location.longitude,
@@ -246,7 +266,7 @@ suspend fun <T : Message> TelegramApi.sendMessage(
                 "proximity_alert_radius" to content.location.proximityAlertRadius
             )
         )
-        is InvoiceContent -> request(
+        is InvoiceContent -> call(
             "sendInvoice", parameters + mapOf(
                 "title" to content.title,
                 "description" to content.description,
@@ -294,7 +314,7 @@ suspend fun TelegramApi.forwardMessage(
     fromChatId: ChatId,
     messageId: Long,
     disableNotification: Boolean = false
-) = request<Message>(
+) = call<Message>(
     "forwardMessage", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "from_chat_id" to (fromChatId.id ?: chatId.username),
@@ -326,7 +346,7 @@ suspend fun TelegramApi.forwardMessage(
     chatId: ChatId,
     messageId: MessageId,
     disableNotification: Boolean = false
-) = request<Message>(
+) = call<Message>(
     "forwardMessage", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "from_chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
@@ -343,7 +363,7 @@ suspend fun TelegramApi.copyMessage(
     disableNotification: Boolean = false,
     allowSendingWithoutReply: Boolean = true,
     replyMarkup: ReplyMarkup? = null
-) = request<JsonObject>(
+) = call<JsonObject>(
     "copyMessage", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "from_chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
@@ -363,34 +383,34 @@ suspend fun TelegramApi.sendMediaGroup(
     disableNotification: Boolean = false,
     replyToMessageId: Long? = null,
     allowSendingWithoutReply: Boolean = true
-) = request<List<Message>>("sendMediaGroup", mapOf(
+) = call<List<Message>>("sendMediaGroup", mapOf(
     "chat_id" to (chatId.id ?: chatId.username),
     "media" to media.toJson(),
     "disable_notification" to disableNotification,
     "reply_to_message_id" to replyToMessageId,
     "allow_sending_without_reply" to allowSendingWithoutReply
-), media.mapNotNull { it.media.fileName?.to(it.media.content!!.invoke()) }.toMap())
+), media.mapNotNull { it.media.fileName?.to(it.media) }.toMap())
 
 suspend fun TelegramApi.sendMediaGroup(
     replyToMessageId: MessageId,
     media: List<OutputMedia>,
     disableNotification: Boolean = false,
     allowSendingWithoutReply: Boolean = true
-) = request<List<Message>>(
+) = call<List<Message>>(
     "sendMediaGroup", mapOf(
         "chat_id" to (replyToMessageId.chatId.id ?: replyToMessageId.chatId.username),
         "media" to media.toJson(),
         "disable_notification" to disableNotification,
         "reply_to_message_id" to replyToMessageId.messageId,
         "allow_sending_without_reply" to allowSendingWithoutReply
-    ), media.mapNotNull { it.media.fileName?.to(it.media.content!!.invoke()) }.toMap()
+    ), media.mapNotNull { it.media.fileName?.to(it.media) }.toMap()
 )
 
 suspend fun TelegramApi.editMessageLiveLocation(
     messageId: MessageId,
     location: Location,
     replyMarkup: InlineKeyboard? = null
-) = request<LocationMessage>(
+) = call<LocationMessage>(
     "editMessageLiveLocation", mapOf(
         "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
         "message_id" to messageId.messageId,
@@ -408,7 +428,7 @@ suspend fun TelegramApi.editMessageLiveLocation(
     location: Location,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<JsonElement>(
+    call<JsonElement>(
         "editMessageLiveLocation", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -427,7 +447,7 @@ suspend fun TelegramApi.editMessageLiveLocation(
 suspend fun TelegramApi.stopMessageLiveLocation(
     messageId: MessageId,
     replyMarkup: InlineKeyboard? = null
-) = request<LocationMessage>(
+) = call<LocationMessage>(
     "stopMessageLiveLocation", mapOf(
         "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
         "message_id" to messageId.messageId,
@@ -440,7 +460,7 @@ suspend fun TelegramApi.stopMessageLiveLocation(
     inlineMessageId: InlineMessageId,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<JsonElement>(
+    call<JsonElement>(
         "stopMessageLiveLocation", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -452,7 +472,7 @@ suspend fun TelegramApi.stopMessageLiveLocation(
 }
 
 suspend fun TelegramApi.sendChatAction(chatId: ChatId, action: ChatAction) {
-    request<Boolean>(
+    call<Boolean>(
         "sendChatAction", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "action" to action.toString()
@@ -461,7 +481,7 @@ suspend fun TelegramApi.sendChatAction(chatId: ChatId, action: ChatAction) {
 }
 
 suspend fun TelegramApi.getUserProfilePhotos(userId: Long, offset: Int = 0, limit: Int = 100) =
-    request<UserProfilePhotos>(
+    call<UserProfilePhotos>(
         "getUserProfilePhotos", mapOf(
             "user_id" to userId,
             "offset" to offset,
@@ -470,7 +490,7 @@ suspend fun TelegramApi.getUserProfilePhotos(userId: Long, offset: Int = 0, limi
     )
 
 suspend fun TelegramApi.getFile(fileId: String) =
-    request<File>("getFile", mapOf("file_id" to fileId))
+    call<File>("getFile", mapOf("file_id" to fileId))
 
 suspend fun TelegramApi.downloadFile(fileId: String): ByteArray {
     val file = getFile(fileId)
@@ -485,7 +505,7 @@ suspend fun TelegramApi.kickChatMember(
     untilDate: Int? = null,
     revokeMessages: Boolean = false
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "kickChatMember", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
@@ -501,7 +521,7 @@ suspend fun TelegramApi.banChatMember(
     untilDate: Int? = null,
     revokeMessages: Boolean = false
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "banChatMember", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
@@ -516,7 +536,7 @@ suspend fun TelegramApi.unbanChatMember(
     userId: Long,
     onlyIfBanned: Boolean = true
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "unbanChatMember", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
@@ -531,7 +551,7 @@ suspend fun TelegramApi.restrictChatMember(
     permissions: ChatPermissions,
     untilDate: Int? = null
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "restrictChatMember", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
@@ -547,7 +567,7 @@ suspend fun TelegramApi.promoteChatMember(
     permissions: AdminPermissions,
     untilDate: Int? = null
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "promoteChatMember", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
@@ -572,7 +592,7 @@ suspend fun TelegramApi.setChatAdministratorCustomTitle(
     userId: Long,
     customTitle: String
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "setChatAdministratorCustomTitle", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "user_id" to userId,
@@ -582,7 +602,7 @@ suspend fun TelegramApi.setChatAdministratorCustomTitle(
 }
 
 suspend fun TelegramApi.setChatPermissions(chatId: ChatId, permissions: ChatPermissions) {
-    request<Boolean>(
+    call<Boolean>(
         "setChatPermissions", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "permissions" to permissions
@@ -590,7 +610,7 @@ suspend fun TelegramApi.setChatPermissions(chatId: ChatId, permissions: ChatPerm
     )
 }
 
-suspend fun TelegramApi.exportChatInviteLink(chatId: ChatId) = request<String>(
+suspend fun TelegramApi.exportChatInviteLink(chatId: ChatId) = call<String>(
     "exportChatInviteLink", mapOf(
         "chat_id" to (chatId.id ?: chatId.username)
     )
@@ -600,7 +620,7 @@ suspend fun TelegramApi.createChatInviteLink(
     chatId: ChatId,
     expireDate: Int? = null,
     memberLimit: Int? = null
-) = request<ChatInviteLink>(
+) = call<ChatInviteLink>(
     "createChatInviteLink", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "expire_date" to expireDate,
@@ -613,7 +633,7 @@ suspend fun TelegramApi.editChatInviteLink(
     inviteLink: String,
     expireDate: Int? = null,
     numberLimit: Int? = null
-) = request<ChatInviteLink>(
+) = call<ChatInviteLink>(
     "editChatInviteLink", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "invite_link" to inviteLink,
@@ -625,13 +645,22 @@ suspend fun TelegramApi.editChatInviteLink(
 suspend fun TelegramApi.revokeChatInviteLink(
     chatId: ChatId,
     inviteLink: String,
-) = request<ChatInviteLink>(
+) = call<ChatInviteLink>(
     "revokeChatInviteLink", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "invite_link" to inviteLink
     )
 )
 
+suspend fun TelegramApi.setChatPhoto(chatId: ChatId, photo: OutputFile) {
+    call<Boolean>(
+        "setChatPhoto", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username)
+        ), mapOf("photo" to photo)
+    )
+}
+
+@Deprecated("Use TelegramApi.setChatPhoto", ReplaceWith("TelegramApi.setChatPhoto"))
 suspend fun TelegramApi.setChatPhoto(chatId: ChatId, photo: ByteArray) {
     request<Boolean>(
         "setChatPhoto", mapOf(
@@ -641,7 +670,7 @@ suspend fun TelegramApi.setChatPhoto(chatId: ChatId, photo: ByteArray) {
 }
 
 suspend fun TelegramApi.deleteChatPhoto(chatId: ChatId) {
-    request<Boolean>(
+    call<Boolean>(
         "deleteChatPhoto", mapOf(
             "chat_id" to (chatId.id ?: chatId.username)
         )
@@ -649,7 +678,7 @@ suspend fun TelegramApi.deleteChatPhoto(chatId: ChatId) {
 }
 
 suspend fun TelegramApi.setChatTitle(chatId: ChatId, title: String) {
-    request<Boolean>(
+    call<Boolean>(
         "setChatTitle", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "title" to title
@@ -658,7 +687,7 @@ suspend fun TelegramApi.setChatTitle(chatId: ChatId, title: String) {
 }
 
 suspend fun TelegramApi.setChatDescription(chatId: ChatId, description: String) {
-    request<Boolean>(
+    call<Boolean>(
         "setChatDescription", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "description" to description
@@ -667,7 +696,7 @@ suspend fun TelegramApi.setChatDescription(chatId: ChatId, description: String) 
 }
 
 suspend fun TelegramApi.pinChatMessage(messageId: MessageId, disableNotification: Boolean = false) {
-    request<Boolean>(
+    call<Boolean>(
         "pinChatMessage", mapOf(
             "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
             "message_id" to messageId.messageId,
@@ -677,7 +706,7 @@ suspend fun TelegramApi.pinChatMessage(messageId: MessageId, disableNotification
 }
 
 suspend fun TelegramApi.unpinChatMessage(chatId: ChatId, messageId: Long? = null) {
-    request<Boolean>(
+    call<Boolean>(
         "unpinChatMessage", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "message_id" to messageId,
@@ -686,7 +715,7 @@ suspend fun TelegramApi.unpinChatMessage(chatId: ChatId, messageId: Long? = null
 }
 
 suspend fun TelegramApi.unpinAllChatMessages(chatId: ChatId) {
-    request<Boolean>(
+    call<Boolean>(
         "unpinAllChatMessages", mapOf(
             "chat_id" to (chatId.id ?: chatId.username)
         )
@@ -694,39 +723,39 @@ suspend fun TelegramApi.unpinAllChatMessages(chatId: ChatId) {
 }
 
 suspend fun TelegramApi.leaveChat(chatId: ChatId) {
-    request<Boolean>(
+    call<Boolean>(
         "leaveChat", mapOf(
             "chat_id" to (chatId.id ?: chatId.username)
         )
     )
 }
 
-suspend fun TelegramApi.getChat(chatId: ChatId) = request<DetailedChat>(
+suspend fun TelegramApi.getChat(chatId: ChatId) = call<DetailedChat>(
     "getChat", mapOf(
         "chat_id" to (chatId.id ?: chatId.username)
     )
 )
 
-suspend fun TelegramApi.getChatAdministrators(chatId: ChatId) = request<List<ChatMember>>(
+suspend fun TelegramApi.getChatAdministrators(chatId: ChatId) = call<List<ChatMember>>(
     "getChatAdministrators", mapOf(
         "chat_id" to (chatId.id ?: chatId.username)
     )
 )
 
 @Deprecated("old Telegram Bot API", ReplaceWith("banChatMember"))
-suspend fun TelegramApi.getChatMembersCount(chatId: ChatId) = request<Int>(
+suspend fun TelegramApi.getChatMembersCount(chatId: ChatId) = call<Int>(
     "getChatMembersCount", mapOf(
         "chat_id" to (chatId.id ?: chatId.username)
     )
 )
 
-suspend fun TelegramApi.getChatMemberCount(chatId: ChatId) = request<Int>(
+suspend fun TelegramApi.getChatMemberCount(chatId: ChatId) = call<Int>(
     "getChatMemberCount", mapOf(
         "chat_id" to (chatId.id ?: chatId.username)
     )
 )
 
-suspend fun TelegramApi.getChatMember(chatId: ChatId, userId: Long) = request<ChatMember>(
+suspend fun TelegramApi.getChatMember(chatId: ChatId, userId: Long) = call<ChatMember>(
     "getChatMember", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "user_id" to userId
@@ -734,7 +763,7 @@ suspend fun TelegramApi.getChatMember(chatId: ChatId, userId: Long) = request<Ch
 )
 
 suspend fun TelegramApi.setChatStickerSet(chatId: ChatId, stickerSetName: String) {
-    request<Boolean>(
+    call<Boolean>(
         "setChatStickerSet", mapOf(
             "chat_id" to (chatId.id ?: chatId.username),
             "sticker_set_name" to stickerSetName
@@ -743,7 +772,7 @@ suspend fun TelegramApi.setChatStickerSet(chatId: ChatId, stickerSetName: String
 }
 
 suspend fun TelegramApi.deleteChatStickerSet(chatId: ChatId) {
-    request<Boolean>("deleteChatStickerSet", mapOf("chat_id" to (chatId.id ?: chatId.username)))
+    call<Boolean>("deleteChatStickerSet", mapOf("chat_id" to (chatId.id ?: chatId.username)))
 }
 
 suspend fun TelegramApi.answerCallbackQuery(
@@ -753,7 +782,7 @@ suspend fun TelegramApi.answerCallbackQuery(
     url: String? = null,
     cacheTime: Int = 0
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "answerCallbackQuery", mapOf(
             "callback_query_id" to callbackQueryId,
             "text" to text,
@@ -769,7 +798,7 @@ suspend fun TelegramApi.setMyCommands(
     languageCode: String? = null,
     vararg commands: BotCommand
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "setMyCommands", mapOf(
             "commands" to commands.toJson(),
             "scope" to scope.toJson(),
@@ -783,7 +812,7 @@ suspend fun TelegramApi.setMyCommands(
     languageCode: String? = null,
     commands: List<BotCommand>
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "setMyCommands", mapOf(
             "commands" to commands.toJson(),
             "scope" to scope.toJson(),
@@ -793,13 +822,13 @@ suspend fun TelegramApi.setMyCommands(
 }
 
 suspend fun TelegramApi.getMyCommands(scope: BotCommandScope = BotCommandScope.Default, languageCode: String? = null) =
-    request<List<BotCommand>>("getMyCommands", mapOf(
+    call<List<BotCommand>>("getMyCommands", mapOf(
         "scope" to scope.toJson(),
         "language_code" to languageCode
     ))
 
 suspend fun TelegramApi.deleteMyCommands(scope: BotCommandScope = BotCommandScope.Default, languageCode: String? = null) =
-    request<List<BotCommand>>("deleteMyCommands", mapOf(
+    call<List<BotCommand>>("deleteMyCommands", mapOf(
         "scope" to scope.toJson(),
         "language_code" to languageCode
     ))
@@ -809,7 +838,7 @@ suspend inline fun <reified T : Message> TelegramApi.editMessageText(
     text: Text,
     disableWebPagePreview: Boolean = false,
     replyMarkup: InlineKeyboard? = null
-) = request<T>(
+) = call<T>(
     "editMessageText", mapOf(
         "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
         "message_id" to messageId.messageId,
@@ -826,7 +855,7 @@ suspend fun TelegramApi.editMessageText(
     disableWebPagePreview: Boolean = false,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<JsonElement>(
+    call<JsonElement>(
         "editMessageText", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -844,7 +873,7 @@ suspend inline fun <reified T : Message> TelegramApi.editMessageCaption(
     messageId: MessageId,
     text: Text,
     replyMarkup: InlineKeyboard? = null
-) = request<T>(
+) = call<T>(
     "editMessageCaption", mapOf(
         "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
         "message_id" to messageId.messageId,
@@ -859,7 +888,7 @@ suspend fun TelegramApi.editMessageCaption(
     text: Text,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<JsonElement>(
+    call<JsonElement>(
         "editMessageCaption", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -876,7 +905,7 @@ suspend inline fun <reified T : Message> TelegramApi.editMessageMedia(
     messageId: MessageId,
     media: OutputMedia,
     replyMarkup: InlineKeyboard? = null
-) = request<T>(
+) = call<T>(
     "editMessageMedia",
     mapOf(
         "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
@@ -884,7 +913,7 @@ suspend inline fun <reified T : Message> TelegramApi.editMessageMedia(
         "media" to json.encodeToString(media),
         "reply_markup" to if (replyMarkup != null) json.encodeToString(replyMarkup) else null
     ),
-    if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media.content?.invoke()) else emptyMap()
+    if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media) else emptyMap()
 )
 
 suspend fun TelegramApi.editMessageMedia(
@@ -892,7 +921,7 @@ suspend fun TelegramApi.editMessageMedia(
     media: OutputMedia,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<JsonElement>(
+    call<JsonElement>(
         "editMessageMedia",
         mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
@@ -902,14 +931,14 @@ suspend fun TelegramApi.editMessageMedia(
             "media" to json.encodeToString(media),
             "reply_markup" to replyMarkup?.toJson()
         ),
-        if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media.content?.invoke()) else emptyMap()
+        if (media.media.fileName != null) mapOf(media.media.fileName!! to media.media) else emptyMap()
     )
 }
 
 suspend inline fun <reified T : Message> TelegramApi.editMessageReplyMarkup(
     messageId: MessageId,
     replyMarkup: InlineKeyboard? = null
-) = request<T>(
+) = call<T>(
     "editMessageReplyMarkup", mapOf(
         "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
         "message_id" to messageId.messageId,
@@ -921,7 +950,7 @@ suspend fun TelegramApi.editMessageReplyMarkup(
     inlineMessageId: InlineMessageId,
     replyMarkup: InlineKeyboard? = null
 ) {
-    request<JsonElement>(
+    call<JsonElement>(
         "editMessageReplyMarkup", mapOf(
             "inline_message_id" to inlineMessageId.inlineId,
             "message_id" to inlineMessageId.messageId?.messageId,
@@ -933,7 +962,7 @@ suspend fun TelegramApi.editMessageReplyMarkup(
 }
 
 suspend fun TelegramApi.stopPoll(messageId: MessageId, replyMarkup: InlineKeyboard? = null) =
-    request<Poll>(
+    call<Poll>(
         "stopPoll", mapOf(
             "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
             "message_id" to messageId.messageId,
@@ -942,7 +971,7 @@ suspend fun TelegramApi.stopPoll(messageId: MessageId, replyMarkup: InlineKeyboa
     )
 
 suspend fun TelegramApi.deleteMessage(messageId: MessageId) {
-    request<Boolean>(
+    call<Boolean>(
         "deleteMessage", mapOf(
             "chat_id" to (messageId.chatId.id ?: messageId.chatId.username),
             "message_id" to messageId.messageId
@@ -951,8 +980,17 @@ suspend fun TelegramApi.deleteMessage(messageId: MessageId) {
 }
 
 suspend fun TelegramApi.getStickerSet(name: String) =
-    request<StickerSet>("getStickerSet", mapOf("name" to name))
+    call<StickerSet>("getStickerSet", mapOf("name" to name))
 
+suspend fun TelegramApi.uploadStickerFile(userId: Long, sticker: OutputFile): File {
+    return call<File>(
+        "uploadStickerFile",
+        mapOf("user_id" to userId),
+        mapOf("png_sticker" to sticker)
+    )
+}
+
+@Deprecated("Use TelegramApi.uploadStickerFile", ReplaceWith("TelegramApi.uploadStickerFile"))
 suspend fun TelegramApi.uploadStickerFile(userId: Long, pngSticker: ByteArray): File {
     return request<File>(
         "uploadStickerFile",
@@ -965,22 +1003,23 @@ suspend fun TelegramApi.createNewStickerSet(
     userId: Long,
     name: String,
     title: String,
-    pngSticker: OutputFile,
+    sticker: OutputFile,
     emojis: String,
     containsMasks: Boolean = false,
     maskPosition: MaskPosition? = null
-) = request<StickerSet>(
+) = call<StickerSet>(
     "createNewStickerSet", mapOf(
         "user_id" to userId,
         "name" to name,
         "title" to title,
-        "png_sticker" to (pngSticker.fileId ?: pngSticker.url),
+        "png_sticker" to (sticker.fileId ?: sticker.url),
         "emojis" to emojis,
         "contains_masks" to containsMasks,
         "mask_position" to maskPosition?.toJson()
-    ), mapOf("png_sticker" to pngSticker.content?.invoke())
+    ), mapOf((if (sticker.fileName?.endsWith(".png") == true) "png_sticker" else "tgs_sticker") to sticker)
 )
 
+@Deprecated("Use TelegramApi.createNewStickerSet", ReplaceWith("TelegramApi.createNewStickerSet"))
 suspend fun TelegramApi.createNewStickerSet(
     userId: Long,
     name: String,
@@ -1003,21 +1042,22 @@ suspend fun TelegramApi.createNewStickerSet(
 suspend fun TelegramApi.addStickerToSet(
     userId: Long,
     name: String,
-    pngSticker: OutputFile,
+    sticker: OutputFile,
     emojis: String,
     maskPosition: MaskPosition? = null
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "addStickerToSet", mapOf(
             "user_id" to userId,
             "name" to name,
-            "png_sticker" to (pngSticker.fileId ?: pngSticker.url),
+            "png_sticker" to (sticker.fileId ?: sticker.url),
             "emojis" to emojis,
             "mask_position" to maskPosition?.toJson()
-        ), mapOf("png_sticker" to pngSticker.content?.invoke())
+        ), mapOf((if (sticker.fileName?.endsWith(".png") == true) "png_sticker" else "tgs_sticker") to sticker)
     )
 }
 
+@Deprecated("Use TelegramApi.addStickerToSet", ReplaceWith("TelegramApi.addStickerToSet"))
 suspend fun TelegramApi.addStickerToSet(
     userId: Long,
     name: String,
@@ -1036,7 +1076,7 @@ suspend fun TelegramApi.addStickerToSet(
 }
 
 suspend fun TelegramApi.setStickerPositionInSet(sticker: String, position: Int) {
-    request<Boolean>(
+    call<Boolean>(
         "setStickerPositionInSet", mapOf(
             "sticker" to sticker,
             "position" to position
@@ -1045,7 +1085,7 @@ suspend fun TelegramApi.setStickerPositionInSet(sticker: String, position: Int) 
 }
 
 suspend fun TelegramApi.deleteStickerFromSet(sticker: String) {
-    request<Boolean>(
+    call<Boolean>(
         "deleteStickerFromSet", mapOf("sticker" to sticker)
     )
 }
@@ -1055,12 +1095,12 @@ suspend fun TelegramApi.setStickerSetThumb(
     userId: Long,
     thumbnail: OutputFile? = null
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "setStickerSetThumb", mapOf(
             "user_id" to userId,
             "name" to name,
             "thumb" to (thumbnail?.fileId ?: thumbnail?.url)
-        ), mapOf("thumb" to thumbnail?.content?.invoke())
+        ), mapOf("thumb" to thumbnail)
     )
 }
 
@@ -1073,7 +1113,7 @@ suspend fun TelegramApi.answerInlineQuery(
     switchPrivateMessageText: String? = null,
     switchPrivateMessageParameter: String? = null
 ) {
-    request<Boolean>(
+    call<Boolean>(
         "answerInlineQuery", mapOf(
             "inline_query_id" to inlineQueryId,
             "results" to results.toJson(),
@@ -1092,7 +1132,7 @@ suspend fun TelegramApi.setGameScore(
     force: Boolean = false,
     disableEditMessage: Boolean = false,
     messageId: MessageId
-) = request<GameMessage>(
+) = call<GameMessage>(
     "setGameScore", mapOf(
         "user_id" to userId,
         "score" to score,
@@ -1110,7 +1150,7 @@ suspend fun TelegramApi.setGameScore(
     disableEditMessage: Boolean = false,
     inlineMessageId: InlineMessageId
 ) {
-    request<JsonElement>(
+    call<JsonElement>(
         "setGameScore", mapOf(
             "user_id" to userId,
             "score" to score,
@@ -1127,7 +1167,7 @@ suspend fun TelegramApi.setGameScore(
 suspend fun TelegramApi.getGameHighScores(
     userId: Long,
     inlineMessageId: InlineMessageId
-) = request<List<GameHighScore>>(
+) = call<List<GameHighScore>>(
     "getGameHighScores", mapOf(
         "user_id" to userId,
         "inline_message_id" to inlineMessageId.inlineId,
@@ -1140,7 +1180,7 @@ suspend fun TelegramApi.getGameHighScores(
 suspend fun TelegramApi.answerShippingQuery(
     shippingQueryId: String,
     shippingOptions: List<ShippingOption>
-) = request<Boolean>(
+) = call<Boolean>(
     "answerShippingQuery", mapOf(
         "shipping_query_id" to shippingQueryId,
         "ok" to true,
@@ -1151,7 +1191,7 @@ suspend fun TelegramApi.answerShippingQuery(
 suspend fun TelegramApi.answerShippingQuery(
     shippingQueryId: String,
     errorMessage: String
-) = request<Boolean>(
+) = call<Boolean>(
     "answerShippingQuery", mapOf(
         "shipping_query_id" to shippingQueryId,
         "ok" to false,
@@ -1159,7 +1199,7 @@ suspend fun TelegramApi.answerShippingQuery(
     )
 )
 
-suspend fun TelegramApi.answerPreCheckoutQuery(preCheckoutQueryId: String) = request<Boolean>(
+suspend fun TelegramApi.answerPreCheckoutQuery(preCheckoutQueryId: String) = call<Boolean>(
     "answerPreCheckoutQuery", mapOf(
         "pre_checkout_query_id" to preCheckoutQueryId,
         "ok" to true
@@ -1169,7 +1209,7 @@ suspend fun TelegramApi.answerPreCheckoutQuery(preCheckoutQueryId: String) = req
 suspend fun TelegramApi.answerPreCheckoutQuery(
     preCheckoutQueryId: String,
     errorMessage: String
-) = request<Boolean>(
+) = call<Boolean>(
     "answerPreCheckoutQuery", mapOf(
         "pre_checkout_query_id" to preCheckoutQueryId,
         "ok" to false,
