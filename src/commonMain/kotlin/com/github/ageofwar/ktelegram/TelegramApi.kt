@@ -158,7 +158,7 @@ class TelegramApi private constructor(
     suspend inline fun <reified T> request(
         method: String,
         parameters: Map<String, Any?> = mapOf(),
-        files: Map<String, ByteArray?>
+        files: Map<String, ByteArray?> = mapOf()
     ): T = try {
         request<Result<T>>(method, typeOf<Result<T>>(), parameters, files).unwrap()
     } catch (e: TelegramException) {
