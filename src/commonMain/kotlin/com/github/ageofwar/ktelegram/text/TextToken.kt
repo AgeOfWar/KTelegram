@@ -3,43 +3,46 @@ package com.github.ageofwar.ktelegram.text
 import com.github.ageofwar.ktelegram.MessageEntity
 import com.github.ageofwar.ktelegram.Text
 
-sealed class TextToken(private val start: Boolean) {
-    fun isStart() = start
-    fun isEnd() = !start
-
+sealed class TextToken(val type: TokenType) {
     override fun toString() = this::class.simpleName!!
 
-    data class Text(val text: String) : TextToken(false)
-    object StartBold : TextToken(true)
-    object StartItalic : TextToken(true)
-    object StartUnderline : TextToken(true)
-    object StartStrikethrough : TextToken(true)
-    object StartCode : TextToken(true)
-    data class StartPre(val language: String?) : TextToken(true)
-    data class StartTextLink(val url: String?) : TextToken(true)
-    data class StartTextMention(val sender: MessageEntity.TextMention.Sender?) : TextToken(true)
-    object StartMention : TextToken(true)
-    object StartHashtag : TextToken(true)
-    object StartCashtag : TextToken(true)
-    object StartBotCommand : TextToken(true)
-    object StartUrl : TextToken(true)
-    object StartEmail : TextToken(true)
-    object StartPhoneNumber : TextToken(true)
-    object EndBold : TextToken(false)
-    object EndItalic : TextToken(false)
-    object EndUnderline : TextToken(false)
-    object EndStrikethrough : TextToken(false)
-    object EndCode : TextToken(false)
-    data class EndPre(val language: String?) : TextToken(false)
-    data class EndTextLink(val url: String?) : TextToken(false)
-    data class EndTextMention(val sender: MessageEntity.TextMention.Sender?) : TextToken(false)
-    object EndMention : TextToken(false)
-    object EndHashtag : TextToken(false)
-    object EndCashtag : TextToken(false)
-    object EndBotCommand : TextToken(false)
-    object EndUrl : TextToken(false)
-    object EndEmail : TextToken(false)
-    object EndPhoneNumber : TextToken(false)
+    data class Text(val text: String) : TextToken(TokenType.TEXT)
+    object StartBold : TextToken(TokenType.TAG_START)
+    object StartItalic : TextToken(TokenType.TAG_START)
+    object StartUnderline : TextToken(TokenType.TAG_START)
+    object StartStrikethrough : TextToken(TokenType.TAG_START)
+    object StartCode : TextToken(TokenType.TAG_START)
+    data class StartPre(val language: String?) : TextToken(TokenType.TAG_START)
+    data class StartTextLink(val url: String?) : TextToken(TokenType.TAG_START)
+    data class StartTextMention(val sender: MessageEntity.TextMention.Sender?) : TextToken(TokenType.TAG_START)
+    object StartMention : TextToken(TokenType.TAG_START)
+    object StartHashtag : TextToken(TokenType.TAG_START)
+    object StartCashtag : TextToken(TokenType.TAG_START)
+    object StartBotCommand : TextToken(TokenType.TAG_START)
+    object StartUrl : TextToken(TokenType.TAG_START)
+    object StartEmail : TextToken(TokenType.TAG_START)
+    object StartPhoneNumber : TextToken(TokenType.TAG_START)
+    object EndBold : TextToken(TokenType.TAG_END)
+    object EndItalic : TextToken(TokenType.TAG_END)
+    object EndUnderline : TextToken(TokenType.TAG_END)
+    object EndStrikethrough : TextToken(TokenType.TAG_END)
+    object EndCode : TextToken(TokenType.TAG_END)
+    data class EndPre(val language: String?) : TextToken(TokenType.TAG_END)
+    data class EndTextLink(val url: String?) : TextToken(TokenType.TAG_END)
+    data class EndTextMention(val sender: MessageEntity.TextMention.Sender?) : TextToken(TokenType.TAG_END)
+    object EndMention : TextToken(TokenType.TAG_END)
+    object EndHashtag : TextToken(TokenType.TAG_END)
+    object EndCashtag : TextToken(TokenType.TAG_END)
+    object EndBotCommand : TextToken(TokenType.TAG_END)
+    object EndUrl : TextToken(TokenType.TAG_END)
+    object EndEmail : TextToken(TokenType.TAG_END)
+    object EndPhoneNumber : TextToken(TokenType.TAG_END)
+}
+
+enum class TokenType {
+    TEXT,
+    TAG_START,
+    TAG_END
 }
 
 fun Text.toTokens() = mutableListOf<TextToken>().apply {
@@ -119,22 +122,7 @@ fun List<TextToken>.toText(): Text {
     val entities = mutableListOf<MessageEntity?>()
     val startTokens = mutableListOf<Pair<TextToken, Int>>()
 
-    fun acceptNestableToken(token: TextToken) {
-        val nestable = startTokens.all { (token, _) ->
-            token is TextToken.StartBold ||
-                    token is TextToken.StartItalic ||
-                    token is TextToken.StartUnderline ||
-                    token is TextToken.StartStrikethrough
-        }
-        if (!nestable) throw TextParseException("Cannot nest $token because one or more tokens are not nestable")
-        startTokens += Pair(token, textBuilder.length)
-        entities += null
-    }
-
     fun acceptToken(token: TextToken) {
-        if (startTokens.isNotEmpty()) {
-            throw TextParseException("Token $token is not nestable")
-        }
         startTokens += Pair(token, textBuilder.length)
         entities += null
     }
@@ -260,38 +248,10 @@ fun List<TextToken>.toText(): Text {
     }
 
     forEach {
-        when (it) {
-            is TextToken.Text -> textBuilder.append(it.text)
-            is TextToken.StartBold -> acceptNestableToken(it)
-            is TextToken.StartItalic -> acceptNestableToken(it)
-            is TextToken.StartUnderline -> acceptNestableToken(it)
-            is TextToken.StartStrikethrough -> acceptNestableToken(it)
-            is TextToken.StartCode -> acceptToken(it)
-            is TextToken.StartPre -> acceptToken(it)
-            is TextToken.StartTextLink -> acceptToken(it)
-            is TextToken.StartTextMention -> acceptToken(it)
-            is TextToken.StartMention -> acceptToken(it)
-            is TextToken.StartHashtag -> acceptToken(it)
-            is TextToken.StartCashtag -> acceptToken(it)
-            is TextToken.StartBotCommand -> acceptToken(it)
-            is TextToken.StartUrl -> acceptToken(it)
-            is TextToken.StartEmail -> acceptToken(it)
-            is TextToken.StartPhoneNumber -> acceptToken(it)
-            is TextToken.EndBold -> completeEntity(it)
-            is TextToken.EndItalic -> completeEntity(it)
-            is TextToken.EndUnderline -> completeEntity(it)
-            is TextToken.EndStrikethrough -> completeEntity(it)
-            is TextToken.EndCode -> completeEntity(it)
-            is TextToken.EndPre -> completeEntity(it)
-            is TextToken.EndTextLink -> completeEntity(it)
-            is TextToken.EndTextMention -> completeEntity(it)
-            is TextToken.EndMention -> completeEntity(it)
-            is TextToken.EndHashtag -> completeEntity(it)
-            is TextToken.EndCashtag -> completeEntity(it)
-            is TextToken.EndBotCommand -> completeEntity(it)
-            is TextToken.EndUrl -> completeEntity(it)
-            is TextToken.EndEmail -> completeEntity(it)
-            is TextToken.EndPhoneNumber -> completeEntity(it)
+        when {
+            it is TextToken.Text -> textBuilder.append(it.text)
+            it.type == TokenType.TAG_START -> acceptToken(it)
+            it.type == TokenType.TAG_END -> completeEntity(it)
         }
     }
 
