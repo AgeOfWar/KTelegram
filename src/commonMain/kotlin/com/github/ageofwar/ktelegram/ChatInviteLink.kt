@@ -10,5 +10,8 @@ data class ChatInviteLink(
     @SerialName("is_primary") val isPrimary: Boolean,
     @SerialName("is_revoked") val isRevoked: Boolean,
     @SerialName("expire_date") val expireDate: Int? = null,
-    @SerialName("member_limit") val numberLimit: Int? = null
+    @SerialName("member_limit") val numberLimit: Int? = null,
+    @SerialName("creates_join_request") val createsJoinRequest: Boolean = false,
+    @SerialName("pending_join_request_count") val pendingJoinRequestCount: Int? = null,
+    @SerialName("name") val name: String? = null
 )

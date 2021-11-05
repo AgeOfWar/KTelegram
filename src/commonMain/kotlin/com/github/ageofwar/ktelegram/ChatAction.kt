@@ -33,5 +33,8 @@ enum class ChatAction {
     RECORD_VIDEO_NOTE,
 
     @SerialName("upload_video_note")
-    UPLOAD_VIDEO_NOTE;
+    UPLOAD_VIDEO_NOTE,
+
+    @SerialName("choose_sticker")
+    CHOOSE_STICKER;
 }

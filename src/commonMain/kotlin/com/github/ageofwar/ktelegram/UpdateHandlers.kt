@@ -192,3 +192,18 @@ inline fun Update.handleChatMemberUpdated(block: (ChatMemberUpdated) -> Unit) {
         block(chatMember)
     }
 }
+
+inline fun Update.handleChatJoinRequest(block: (ChatJoinRequest) -> Unit) {
+    if (this is ChatJoinRequestUpdate) {
+        block(chatJoinRequest)
+    }
+}
+
+suspend inline fun Update.handleChatJoinRequest(api: TelegramApi, block: (ChatJoinRequest) -> Boolean?) {
+    if (this is ChatJoinRequestUpdate) {
+        when (block(chatJoinRequest)) {
+            true -> api.approveChatJoinRequest(chatJoinRequest.chat.chatId, chatJoinRequest.sender.id)
+            false -> api.declineChatJoinRequest(chatJoinRequest.chat.chatId, chatJoinRequest.sender.id)
+        }
+    }
+}

@@ -628,17 +628,51 @@ suspend fun TelegramApi.createChatInviteLink(
     )
 )
 
+suspend fun TelegramApi.createChatInviteLink(
+    chatId: ChatId,
+    name: String? = null,
+    expireDate: Int? = null,
+    memberLimit: Int? = null,
+    createsJoinRequest: Boolean = false
+) = call<ChatInviteLink>(
+    "createChatInviteLink", mapOf(
+        "chat_id" to (chatId.id ?: chatId.username),
+        "name" to name,
+        "expire_date" to expireDate,
+        "member_limit" to memberLimit,
+        "creates_join_request" to createsJoinRequest
+    )
+)
+
 suspend fun TelegramApi.editChatInviteLink(
     chatId: ChatId,
     inviteLink: String,
     expireDate: Int? = null,
-    numberLimit: Int? = null
+    memberLimit: Int? = null
 ) = call<ChatInviteLink>(
     "editChatInviteLink", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "invite_link" to inviteLink,
         "expire_date" to expireDate,
-        "number_limit" to numberLimit
+        "member_limit" to memberLimit
+    )
+)
+
+suspend fun TelegramApi.editChatInviteLink(
+    chatId: ChatId,
+    inviteLink: String,
+    name: String? = null,
+    expireDate: Int? = null,
+    memberLimit: Int? = null,
+    createsJoinRequest: Boolean? = null
+) = call<ChatInviteLink>(
+    "editChatInviteLink", mapOf(
+        "chat_id" to (chatId.id ?: chatId.username),
+        "name" to name,
+        "invite_link" to inviteLink,
+        "expire_date" to expireDate,
+        "member_limit" to memberLimit,
+        "creates_join_request" to createsJoinRequest
     )
 )
 
@@ -1180,41 +1214,73 @@ suspend fun TelegramApi.getGameHighScores(
 suspend fun TelegramApi.answerShippingQuery(
     shippingQueryId: String,
     shippingOptions: List<ShippingOption>
-) = call<Boolean>(
-    "answerShippingQuery", mapOf(
-        "shipping_query_id" to shippingQueryId,
-        "ok" to true,
-        "shipping_options" to shippingOptions.toJson()
+) {
+    call<Boolean>(
+        "answerShippingQuery", mapOf(
+            "shipping_query_id" to shippingQueryId,
+            "ok" to true,
+            "shipping_options" to shippingOptions.toJson()
+        )
     )
-)
+}
 
 suspend fun TelegramApi.answerShippingQuery(
     shippingQueryId: String,
     errorMessage: String
-) = call<Boolean>(
-    "answerShippingQuery", mapOf(
-        "shipping_query_id" to shippingQueryId,
-        "ok" to false,
-        "error_message" to errorMessage
+) {
+    call<Boolean>(
+        "answerShippingQuery", mapOf(
+            "shipping_query_id" to shippingQueryId,
+            "ok" to false,
+            "error_message" to errorMessage
+        )
     )
-)
+}
 
-suspend fun TelegramApi.answerPreCheckoutQuery(preCheckoutQueryId: String) = call<Boolean>(
-    "answerPreCheckoutQuery", mapOf(
-        "pre_checkout_query_id" to preCheckoutQueryId,
-        "ok" to true
+suspend fun TelegramApi.answerPreCheckoutQuery(preCheckoutQueryId: String) {
+    call<Boolean>(
+        "answerPreCheckoutQuery", mapOf(
+            "pre_checkout_query_id" to preCheckoutQueryId,
+            "ok" to true
+        )
     )
-)
+}
 
 suspend fun TelegramApi.answerPreCheckoutQuery(
     preCheckoutQueryId: String,
     errorMessage: String
-) = call<Boolean>(
-    "answerPreCheckoutQuery", mapOf(
-        "pre_checkout_query_id" to preCheckoutQueryId,
-        "ok" to false,
-        "error_message" to errorMessage
+) {
+    call<Boolean>(
+        "answerPreCheckoutQuery", mapOf(
+            "pre_checkout_query_id" to preCheckoutQueryId,
+            "ok" to false,
+            "error_message" to errorMessage
+        )
     )
-)
+}
+
+suspend fun TelegramApi.approveChatJoinRequest(
+    chatId: ChatId,
+    userId: Long
+) {
+    call<Boolean>(
+        "approveChatJoinRequest", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "user_id" to userId
+        )
+    )
+}
+
+suspend fun TelegramApi.declineChatJoinRequest(
+    chatId: ChatId,
+    userId: Long
+) {
+    call<Boolean>(
+        "declineChatJoinRequest", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "user_id" to userId
+        )
+    )
+}
 
 private inline fun <reified T : Any> T.toJson() = json.encodeToString(this)

@@ -17,6 +17,7 @@ sealed class Update : Id<Long> {
                 "edited_message" in json -> EditedMessageUpdate.serializer()
                 "channel_post" in json -> ChannelPostUpdate.serializer()
                 "edited_channel_post" in json -> EditedChannelPostUpdate.serializer()
+                "chat_join_request" in json -> ChatJoinRequestUpdate.serializer()
                 "inline_query" in json -> InlineQueryUpdate.serializer()
                 "chosen_inline_result" in json -> ChosenInlineResultUpdate.serializer()
                 "callback_query" in json -> CallbackQueryUpdate.serializer()
@@ -112,6 +113,12 @@ data class MyChatMemberUpdate(
 data class ChatMemberUpdate(
     @SerialName("update_id") override val id: Long,
     @SerialName("chat_member") val chatMember: ChatMemberUpdated
+) : Update()
+
+@Serializable
+data class ChatJoinRequestUpdate(
+    @SerialName("update_id") override val id: Long,
+    @SerialName("chat_join_request") val chatJoinRequest: ChatJoinRequest
 ) : Update()
 
 @Serializable
