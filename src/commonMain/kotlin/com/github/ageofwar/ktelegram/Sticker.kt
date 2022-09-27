@@ -7,14 +7,16 @@ import kotlinx.serialization.Serializable
 data class Sticker(
     @SerialName("file_unique_id") override val id: String,
     @SerialName("file_id") override val fileId: String,
-    @SerialName("file_size") override val fileSize: Int,
+    @SerialName("file_size") override val fileSize: Long,
     val width: Int,
     val height: Int,
     @SerialName("is_animated") val isAnimated: Boolean,
     @SerialName("thumb") val thumbnail: PhotoSize? = null,
     val emoji: String? = null,
     @SerialName("set_name") val setName: String? = null,
-    @SerialName("mask_position") val maskPosition: MaskPosition? = null
+    @SerialName("mask_position") val maskPosition: MaskPosition? = null,
+    @SerialName("is_video") val isVideo: Boolean = false,
+    @SerialName("premium_animation") val premiumAnimation: File? = null
 ) : TelegramFile
 
 @Serializable

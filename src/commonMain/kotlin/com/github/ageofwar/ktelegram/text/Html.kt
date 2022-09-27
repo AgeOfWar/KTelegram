@@ -20,6 +20,7 @@ fun TextToken.toHtml() = when (this) {
     is StartPre -> if (language != null) "<pre><code class=\"$language\">" else "<pre>"
     is StartTextLink -> "<a href=\"${url!!}\">"
     is StartTextMention -> "<a href=\"${sender!!.url}\">"
+    is StartSpoiler -> "<tg-spoiler>"
     is EndBold -> "</b>"
     is EndItalic -> "</i>"
     is EndUnderline -> "</u>"
@@ -28,6 +29,7 @@ fun TextToken.toHtml() = when (this) {
     is EndPre -> if (language != null) "</code></pre>" else "</pre>"
     is EndTextLink -> "</a>"
     is EndTextMention -> "</a>"
+    is EndSpoiler -> "</tg-spoiler>"
     else -> ""
 }
 
@@ -53,7 +55,7 @@ fun Text.Companion.parseHtml(string: String): Text {
                 val isEnd = string.getOrNull(i + 1) == '/'
                 var closeIndex = string.indexOf('>', i + 1)
                 if (closeIndex < 0) throw TextParseException("Unterminated tag at index $i")
-                val tag = string.substring(i + if (isEnd) 2 else 1, closeIndex).trim().toLowerCase()
+                val tag = string.substring(i + if (isEnd) 2 else 1, closeIndex).trim().lowercase()
                 when {
                     tag.isEmpty() -> throw TextParseException("Empty tag at index $i")
                     tag.equals("b", ignoreCase = true) || tag.equals(
@@ -75,6 +77,15 @@ fun Text.Companion.parseHtml(string: String): Text {
                         "del",
                         ignoreCase = true
                     ) -> tokens += if (isEnd) EndStrikethrough else StartStrikethrough
+                    tag.equals("tg-spoiler", ignoreCase = true) -> tokens += if (isEnd) EndSpoiler else StartSpoiler
+                    isEnd && tag.equals("span", ignoreCase = true) -> tokens += EndSpoiler
+                    tag.equals("span", ignoreCase = true) -> {
+                        val attributes = tag.substring(1).trim()
+                        val `class` = attributes.removePrefix("class=").removeSurrounding("\"")
+                            .removeSurrounding("'")
+                        if (`class` != "tg-spoiler") throw TextParseException("Unknown span class '$`class`'")
+                        tokens += StartSpoiler
+                    }
                     isEnd && tag.equals("a", ignoreCase = true) -> tokens += EndTextLink(null)
                     tag.startsWith("a", ignoreCase = true) -> {
                         val attributes = tag.substring(1).trim()

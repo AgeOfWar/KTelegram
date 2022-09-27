@@ -21,7 +21,9 @@ data class DetailedPrivateChat(
     @SerialName("first_name") override val firstName: String,
     @SerialName("last_name") override val lastName: String? = null,
     @SerialName("chat_photo") override val chatPhoto: ChatPhoto? = null,
-    val bio: String? = null
+    val bio: String? = null,
+    @SerialName("has_private_forwards") val hasPrivateForwards: Boolean = false,
+    @SerialName("has_restricted_voice_and_video_messages") val hasRestrictedVoiceAndVideoMessages: Boolean = false
 ) : DetailedChat(), Username, Name {
     override val inviteLink: Nothing? get() = null
     override val pinnedMessage: Nothing? get() = null
@@ -69,7 +71,9 @@ data class DetailedSupergroup(
     @SerialName("sticker_set_name") override val stickerSetName: String? = null,
     @SerialName("can_set_sticker_set") override val canSetStickerSet: Boolean,
     @SerialName("linked_chat_id") val linkedChatId: Long? = null,
-    val location: ChatLocation? = null
+    val location: ChatLocation? = null,
+    @SerialName("join_to_send_messages") val joinToSendMessages: Boolean = false,
+    @SerialName("join_by_request") val joinByRequest: Boolean = false
 ) : DetailedChat(), Username, Title, Description
 
 @Serializable

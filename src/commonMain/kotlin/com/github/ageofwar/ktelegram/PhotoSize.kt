@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 data class PhotoSize(
     @SerialName("file_unique_id") override val id: String,
     @SerialName("file_id") override val fileId: String,
-    @SerialName("file_size") override val fileSize: Int
+    @SerialName("file_size") override val fileSize: Long
 ) : TelegramFile

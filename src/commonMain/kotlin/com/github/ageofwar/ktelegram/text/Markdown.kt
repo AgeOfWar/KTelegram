@@ -5,7 +5,7 @@ import com.github.ageofwar.ktelegram.text.TextToken.*
 
 fun Text.toMarkdown() = toString { it.toMarkdown() }
 
-fun String.toMarkdown() = replace("\\", "\\\\").replace(Regex("[*_~\\[\\]()`]"), "\\\\$0")
+fun String.toMarkdown() = replace("\\", "\\\\").replace(Regex("[*_~|>#+-={}.!\\[\\]()`]"), "\\\\$0")
 
 fun TextToken.toMarkdown() = when (this) {
     is TextToken.Text -> text.toMarkdown()
@@ -17,6 +17,7 @@ fun TextToken.toMarkdown() = when (this) {
     is StartPre -> if (language != null) "```${language}\n" else "```\n"
     is StartTextLink -> "["
     is StartTextMention -> "["
+    is StartSpoiler -> "||"
     is EndBold -> "*"
     is EndItalic -> "_\r"
     is EndUnderline -> "__"
@@ -25,10 +26,11 @@ fun TextToken.toMarkdown() = when (this) {
     is EndPre -> "\n```"
     is EndTextLink -> "](${url!!})"
     is EndTextMention -> "](${sender!!.url})"
+    is EndSpoiler -> "||"
     else -> ""
 }
 
-fun String.parseMarkdown() = replace(Regex("\\\\([*_~\\[\\]()`])"), "$1").replace("\\\\", "\\")
+fun String.parseMarkdown() = replace(Regex("\\\\([*_~|>#+-={}.!\\[\\]()`])"), "$1").replace("\\\\", "\\")
 
 fun Text.Companion.parseMarkdown(string: String): Text {
     val tokens = mutableListOf<TextToken>()
@@ -91,6 +93,18 @@ fun Text.Companion.parseMarkdown(string: String): Text {
                     }
                 }
             }
+            '|' -> {
+                addText()
+                if (string.getOrNull(i + 1) != '|') throw TextParseException("Expected '|' to complete spoiler at index ${i + 1}")
+                if (startTokens.lastOrNull() is StartSpoiler) {
+                    tokens += EndSpoiler
+                    startTokens.removeLast()
+                } else {
+                    tokens += StartSpoiler.also {
+                        startTokens += it
+                    }
+                }
+            }
             '`' -> {
                 addText()
                 if (string.getOrNull(i + 1) == '`' && string.getOrNull(i + 2) == '`') {
@@ -138,7 +152,7 @@ fun Text.Companion.parseMarkdown(string: String): Text {
                 i = closeIndex
             }
             '\\' -> if (i < string.length) when (val escape = string[i + 1]) {
-                '\\', '*', '_', '~', '`', '[', ']', '(', ')' -> {
+                '\\', '*', '_', '~', '`', '[', ']', '(', ')', '{', '}', '>', '#', '+', '-', '|', '.', '!', '=' -> {
                     textBuilder.append(escape)
                     i++
                 }

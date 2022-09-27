@@ -136,6 +136,14 @@ data class Text(
         fun cashtag(cashtag: String): Text {
             return Text("$" + cashtag.toUpperCase(), MessageEntity.Cashtag(0, cashtag.length + 1))
         }
+
+        fun spoiler(text: String): Text {
+            return Text(text, MessageEntity.Spoiler(0, text.length))
+        }
+
+        fun customEmoji(customEmojiId: String, text: String = "✅"): Text {
+            return Text(text, MessageEntity.CustomEmoji(0, text.length, customEmojiId))
+        }
     }
 }
 
@@ -306,6 +314,27 @@ sealed class MessageEntity {
         override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
         override fun typeEquals(other: MessageEntity) = false
     }
+
+    @Serializable
+    @SerialName("custom_emoji")
+    data class CustomEmoji(
+        override val offset: Int,
+        override val length: Int,
+        @SerialName("custom_emoji_id") val customEmojiId: String
+    ) : MessageEntity() {
+        override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
+    }
+
+    @Serializable
+    @SerialName("spoiler")
+    data class Spoiler(
+        override val offset: Int,
+        override val length: Int,
+    ) : MessageEntity() {
+        override fun move(offset: Int, length: Int) = copy(offset = offset, length = length)
+        override fun typeEquals(other: MessageEntity) = false
+    }
 }
 
 @Serializable
@@ -346,6 +375,8 @@ fun Text.getTextMentions() =
 fun Text.getBotCommands() = getEntities<MessageEntity.BotCommand, String> { s, _ -> s.substring(1) }
 fun Text.getPhoneNumbers() = getEntities<MessageEntity.PhoneNumber, String> { s, _ -> s }
 fun Text.getCashtags() = getEntities<MessageEntity.Cashtag, String> { s, _ -> s.substring(1) }
+fun Text.getSpoilers() = getEntities<MessageEntity.Spoiler, String> { s, _ -> s }
+fun Text.getCustomEmojis() = getEntities<MessageEntity.CustomEmoji, String> { _, emoji -> emoji.customEmojiId }
 
 fun Text.getAllUrls() = getUrls() + getLinks().map { it.url }
 

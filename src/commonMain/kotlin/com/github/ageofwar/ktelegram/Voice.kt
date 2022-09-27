@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class Voice(
     @SerialName("file_unique_id") override val id: String,
     @SerialName("file_id") override val fileId: String,
-    @SerialName("file_size") override val fileSize: Int,
+    @SerialName("file_size") override val fileSize: Long,
     val duration: Int,
     @SerialName("mime_type") val mimeType: String? = null
 ) : TelegramFile

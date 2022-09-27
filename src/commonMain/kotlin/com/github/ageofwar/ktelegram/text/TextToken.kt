@@ -22,6 +22,8 @@ sealed class TextToken(val type: TokenType) {
     object StartUrl : TextToken(TokenType.TAG_START)
     object StartEmail : TextToken(TokenType.TAG_START)
     object StartPhoneNumber : TextToken(TokenType.TAG_START)
+    data class StartCustomEmoji(val customEmojiId: String?) : TextToken(TokenType.TAG_START)
+    object StartSpoiler : TextToken(TokenType.TAG_START)
     object EndBold : TextToken(TokenType.TAG_END)
     object EndItalic : TextToken(TokenType.TAG_END)
     object EndUnderline : TextToken(TokenType.TAG_END)
@@ -37,6 +39,8 @@ sealed class TextToken(val type: TokenType) {
     object EndUrl : TextToken(TokenType.TAG_END)
     object EndEmail : TextToken(TokenType.TAG_END)
     object EndPhoneNumber : TextToken(TokenType.TAG_END)
+    object EndSpoiler : TextToken(TokenType.TAG_END)
+    data class EndCustomEmoji(val customEmojiId: String?) : TextToken(TokenType.TAG_END)
 }
 
 enum class TokenType {
@@ -91,6 +95,8 @@ fun MessageEntity.toStartToken() = when (this) {
     is MessageEntity.Url -> TextToken.StartUrl
     is MessageEntity.Email -> TextToken.StartEmail
     is MessageEntity.PhoneNumber -> TextToken.StartPhoneNumber
+    is MessageEntity.Spoiler -> TextToken.StartSpoiler
+    is MessageEntity.CustomEmoji -> TextToken.StartCustomEmoji(customEmojiId)
 }
 
 fun MessageEntity.toEndToken() = when (this) {
@@ -109,6 +115,8 @@ fun MessageEntity.toEndToken() = when (this) {
     is MessageEntity.Url -> TextToken.EndUrl
     is MessageEntity.Email -> TextToken.EndEmail
     is MessageEntity.PhoneNumber -> TextToken.EndPhoneNumber
+    is MessageEntity.Spoiler -> TextToken.EndSpoiler
+    is MessageEntity.CustomEmoji -> TextToken.EndCustomEmoji(customEmojiId)
 }
 
 fun Text.toString(write: (TextToken) -> String) = buildString {
@@ -242,6 +250,23 @@ fun List<TextToken>.toText(): Text {
                     throw TextParseException("Unmatched token $token")
                 }
                 MessageEntity.PhoneNumber(offset, textBuilder.length - offset)
+            }
+            is TextToken.EndSpoiler -> {
+                if (startToken !is TextToken.StartSpoiler) {
+                    throw TextParseException("Unmatched token $token")
+                }
+                MessageEntity.Spoiler(offset, textBuilder.length - offset)
+            }
+            is TextToken.EndCustomEmoji -> {
+                if (startToken !is TextToken.StartCustomEmoji) {
+                    throw TextParseException("Unmatched token $token")
+                }
+                if (startToken.customEmojiId != null && token.customEmojiId != null && startToken.customEmojiId != token.customEmojiId) {
+                    throw TextParseException("Inconsistent sender for token $token")
+                }
+                val customEmojiId = startToken.customEmojiId ?: token.customEmojiId
+                ?: throw TextParseException("Custom emoji id not present in token $token")
+                MessageEntity.CustomEmoji(offset, textBuilder.length - offset, customEmojiId)
             }
             else -> error("Not an end token!")
         }

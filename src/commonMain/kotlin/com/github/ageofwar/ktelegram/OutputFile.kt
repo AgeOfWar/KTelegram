@@ -14,6 +14,8 @@ data class OutputFile internal constructor(
     val fileName: String? = null,
     val content: (() -> ByteArray)? = null
 ) {
+    val fileExtension get() = fileName?.substringAfterLast('.', "")
+
     companion object {
         fun fromFileId(fileId: String) = OutputFile(fileId = fileId)
         fun fromUrl(url: String) = OutputFile(url = url)

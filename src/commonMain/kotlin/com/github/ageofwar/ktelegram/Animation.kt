@@ -13,5 +13,5 @@ data class Animation(
     @SerialName("thumb") val thumbnail: PhotoSize? = null,
     @SerialName("file_name") val fileName: String? = null,
     @SerialName("mime_type") val mimeType: String? = null,
-    @SerialName("file_size") override val fileSize: Int
+    @SerialName("file_size") override val fileSize: Long
 ) : TelegramFile

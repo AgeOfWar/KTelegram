@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class Document(
     @SerialName("file_unique_id") override val id: String,
     @SerialName("file_id") override val fileId: String,
-    @SerialName("file_size") override val fileSize: Int,
+    @SerialName("file_size") override val fileSize: Long,
     @SerialName("thumb") val thumbnail: PhotoSize? = null,
     @SerialName("file_name") val fileName: String? = null,
     @SerialName("mime_type") val mimeType: String? = null

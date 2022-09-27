@@ -1,11 +1,11 @@
 plugins {
-    kotlin("multiplatform") version "1.5.20"
-    kotlin("plugin.serialization") version "1.5.20"
+    kotlin("multiplatform") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.10"
     `maven-publish`
 }
 
 group = "com.github.ageofwar"
-version = "1.7.6"
+version = "1.7.7"
 
 repositories {
     mavenCentral()
@@ -13,7 +13,7 @@ repositories {
 }
 
 kotlin {
-    jvm() {
+    jvm {
         withJava()
         compilations {
             val main by getting
@@ -21,21 +21,19 @@ kotlin {
                 val jvmJar by getting(org.gradle.jvm.tasks.Jar::class) {
                     archiveAppendix.set("")
                 }
-                val metadataJar by getting(org.gradle.jvm.tasks.Jar::class) {
-                    archiveAppendix.set("")
-                    archiveClassifier.set("metadata")
-                }
                 val jvmSourcesJar by getting(org.gradle.jvm.tasks.Jar::class) {
                     archiveAppendix.set("")
                     archiveClassifier.set("sources")
                 }
                 val fatJar by registering(org.gradle.jvm.tasks.Jar::class) {
                     archiveClassifier.set("fat-with-kotlin-stdlib")
+                    duplicatesStrategy = DuplicatesStrategy.INCLUDE
                     from(main.output.classesDirs, main.compileDependencyFiles.map { if (it.isDirectory) it else zipTree(it) })
                     with(jvmJar as CopySpec)
                 }
                 val fatJarWithoutKotlinStdlib by registering(org.gradle.jvm.tasks.Jar::class) {
                     archiveClassifier.set("fat")
+                    duplicatesStrategy = DuplicatesStrategy.INCLUDE
                     from(main.output.classesDirs, main.compileDependencyFiles.filter { !it.name.startsWith("kotlin-stdlib") }.map { if (it.isDirectory) it else zipTree(it) })
                     with(jvmJar as CopySpec)
                 }
@@ -43,7 +41,6 @@ kotlin {
                 artifacts {
                     add("archives", fatJarWithoutKotlinStdlib)
                     add("archives", jvmSourcesJar)
-                    add("archives", metadataJar)
                 }
             }
         }
@@ -52,12 +49,8 @@ kotlin {
     //linuxX64()
 
     sourceSets {
-        val kotlinxSerializationVersion = "1.1.0"
-        val ktorVersion = "1.5.1"
-
-        all {
-            languageSettings.useExperimentalAnnotation("kotlin.ExperimentalStdlibApi")
-        }
+        val kotlinxSerializationVersion = "1.4.0"
+        val ktorVersion = "2.1.1"
 
         val commonMain by getting {
             dependencies {

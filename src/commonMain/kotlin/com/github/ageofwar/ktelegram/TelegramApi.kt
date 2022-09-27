@@ -2,7 +2,7 @@ package com.github.ageofwar.ktelegram
 
 import com.github.ageofwar.ktelegram.json.json
 import io.ktor.client.*
-import io.ktor.client.features.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -39,7 +39,7 @@ class TelegramApi private constructor(
                         parameter(key, value)
                     }
                 } else {
-                    body = MultiPartFormDataContent(formData {
+                    formData {
                         files.forEach { (key, value) ->
                             if (value?.content != null && value.fileName != null) {
                                 val content = value.content.invoke()
@@ -64,12 +64,12 @@ class TelegramApi private constructor(
                                 append(key, value.toString())
                             }
                         }
-                    })
+                    }
                 }
             }
         } catch (e: ClientRequestException) {
-            e.response.readText()
-        }
+            e.response
+        }.bodyAsText()
         @Suppress("UNCHECKED_CAST")
         return try {
             json.decodeFromString(json.serializersModule.serializer(returnType), response) as T
@@ -116,7 +116,7 @@ class TelegramApi private constructor(
                         parameter(key, value)
                     }
                 } else {
-                    body = MultiPartFormDataContent(formData {
+                    formData {
                         files.forEach { (key, value) ->
                             if (value != null) {
                                 appendInput(
@@ -140,12 +140,12 @@ class TelegramApi private constructor(
                                 append(key, value.toString())
                             }
                         }
-                    })
+                    }
                 }
             }
         } catch (e: ClientRequestException) {
-            e.response.readText()
-        }
+            e.response
+        }.bodyAsText()
         @Suppress("UNCHECKED_CAST")
         return try {
             json.decodeFromString(json.serializersModule.serializer(returnType), response) as T
@@ -180,7 +180,7 @@ class TelegramApi private constructor(
     }
 
     suspend fun download(path: String): ByteArray {
-        return httpClient.get("$apiUrl/file/bot$token/$path")
+        return httpClient.get("$apiUrl/file/bot$token/$path").readBytes()
     }
 
     companion object

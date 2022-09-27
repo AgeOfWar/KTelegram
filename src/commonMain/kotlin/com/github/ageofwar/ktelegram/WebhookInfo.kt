@@ -12,6 +12,7 @@ data class WebhookInfo(
     @SerialName("ip_address") val ipAddress: String? = null,
     @SerialName("last_error_date") val lastErrorDate: Int? = null,
     @SerialName("last_error_message") val lastErrorMessage: String? = null,
+    @SerialName("last_synchronization_error_date") val lastSynchronizationErrorDate: Long? = null,
     @SerialName("max_connections") val maxConnections: Int = 40,
     @Serializable(UpdateTypeSetSerializer::class)
     @SerialName("allowed_updates") val allowedUpdates: Set<KClass<out Update>> = emptySet()

@@ -57,6 +57,7 @@ suspend fun TelegramApi.setWebhook(
     ipAddress: String? = null,
     maxConnections: Int = 40,
     dropPendingUpdates: Boolean = false,
+    secretToken: String? = null,
     vararg allowedUpdates: KClass<out Update>
 ) {
     call<Boolean>(
@@ -65,7 +66,8 @@ suspend fun TelegramApi.setWebhook(
             "ip_address" to ipAddress,
             "max_connections" to maxConnections,
             "allowed_updates" to allowedUpdates.map { it.toJsonString() }.toJson(),
-            "drop_pending_updates" to dropPendingUpdates
+            "drop_pending_updates" to dropPendingUpdates,
+            "secret_token" to secretToken
         ), mapOf("certificate" to certificate)
     )
 }
@@ -867,6 +869,18 @@ suspend fun TelegramApi.deleteMyCommands(scope: BotCommandScope = BotCommandScop
         "language_code" to languageCode
     ))
 
+suspend fun TelegramApi.setMyDefaultAdministratorRights(rights: ChatAdministratorRights, forChannels: Boolean = false) {
+    call<Boolean>("setMyDefaultAdministratorRights", mapOf(
+        "rights" to rights,
+        "for_channels" to forChannels
+    ))
+}
+
+suspend fun TelegramApi.getMyDefaultAdministratorRights(forChannels: Boolean = false) =
+    call<ChatAdministratorRights>("setMyDefaultAdministratorRights", mapOf(
+        "for_channels" to forChannels
+    ))
+
 suspend inline fun <reified T : Message> TelegramApi.editMessageText(
     messageId: MessageId,
     text: Text,
@@ -1039,8 +1053,8 @@ suspend fun TelegramApi.createNewStickerSet(
     title: String,
     sticker: OutputFile,
     emojis: String,
-    containsMasks: Boolean = false,
-    maskPosition: MaskPosition? = null
+    maskPosition: MaskPosition? = null,
+    stickerType: StickerSet.Type = StickerSet.Type.REGULAR
 ) = call<StickerSet>(
     "createNewStickerSet", mapOf(
         "user_id" to userId,
@@ -1048,9 +1062,14 @@ suspend fun TelegramApi.createNewStickerSet(
         "title" to title,
         "png_sticker" to (sticker.fileId ?: sticker.url),
         "emojis" to emojis,
-        "contains_masks" to containsMasks,
-        "mask_position" to maskPosition?.toJson()
-    ), mapOf((if (sticker.fileName?.endsWith(".png") == true) "png_sticker" else "tgs_sticker") to sticker)
+        "mask_position" to maskPosition?.toJson(),
+        "sticker_type" to stickerType.toJson()
+    ), mapOf((when (sticker.fileExtension) {
+        "png" -> "png_sticker"
+        "tgs" -> "tgs_sticker"
+        "webm" -> "webm_sticker"
+        else -> "tgs_sticker"
+    }) to sticker)
 )
 
 @Deprecated("Use TelegramApi.createNewStickerSet", ReplaceWith("TelegramApi.createNewStickerSet"))
@@ -1087,7 +1106,12 @@ suspend fun TelegramApi.addStickerToSet(
             "png_sticker" to (sticker.fileId ?: sticker.url),
             "emojis" to emojis,
             "mask_position" to maskPosition?.toJson()
-        ), mapOf((if (sticker.fileName?.endsWith(".png") == true) "png_sticker" else "tgs_sticker") to sticker)
+        ), mapOf((when (sticker.fileExtension) {
+            "png" -> "png_sticker"
+            "tgs" -> "tgs_sticker"
+            "webm" -> "webm_sticker"
+            else -> "tgs_sticker"
+        }) to sticker)
     )
 }
 
@@ -1137,6 +1161,14 @@ suspend fun TelegramApi.setStickerSetThumb(
         ), mapOf("thumb" to thumbnail)
     )
 }
+
+suspend fun TelegramApi.getCustomEmojiStickers(
+    vararg customEmojiIds: String
+) = call<List<Sticker>>(
+        "getCustomEmojiStickers", mapOf(
+            "custom_emoji_ids" to customEmojiIds
+        )
+    )
 
 suspend fun TelegramApi.answerInlineQuery(
     inlineQueryId: String,
@@ -1282,5 +1314,32 @@ suspend fun TelegramApi.declineChatJoinRequest(
         )
     )
 }
+
+suspend fun TelegramApi.createInvoiceLink(invoice: InvoiceContent) =
+    call<String>(
+        "createInvoiceLink", mapOf(
+            "title" to invoice.title,
+            "description" to invoice.description,
+            "payload" to invoice.payload,
+            "provider_token" to invoice.providerToken,
+            "currency" to invoice.currency,
+            "prices" to invoice.prices.toJson(),
+            "max_tip_amount" to invoice.maxTipAmount,
+            "suggested_tip_amounts" to invoice.suggestedTipAmounts.toJson(),
+            "start_parameter" to invoice.startParameter,
+            "provider_data" to invoice.providerData,
+            "photo_url" to invoice.photoUrl,
+            "photo_size" to invoice.photoSize,
+            "photo_width" to invoice.photoWidth,
+            "photo_height" to invoice.photoHeight,
+            "need_name" to invoice.needName,
+            "need_phone_number" to invoice.needPhoneNumber,
+            "need_email" to invoice.needEmail,
+            "need_shipping_address" to invoice.needShippingAddress,
+            "send_phone_number_to_provider" to invoice.sendPhoneNumberToProvider,
+            "send_email_to_provider" to invoice.sendEmailToProvider,
+            "is_flexible" to invoice.flexible
+        )
+    )
 
 private inline fun <reified T : Any> T.toJson() = json.encodeToString(this)

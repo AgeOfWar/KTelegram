@@ -43,7 +43,7 @@ data class Administrator(
     @SerialName("user") override val sender: Sender,
     @SerialName("custom_title") val customTitle: String? = null,
     @SerialName("can_be_edited") val canBeEdited: Boolean,
-    val permissions: AdminPermissions
+    val permissions: ChatAdministratorRights
 ) : ChatMember() {
     @Required
     private val status = "administrator"

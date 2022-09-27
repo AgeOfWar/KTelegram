@@ -27,7 +27,8 @@ data class User(
     override val username: String? = null,
     @SerialName("first_name") override val firstName: String,
     @SerialName("last_name") override val lastName: String? = null,
-    @SerialName("language_code") val languageCode: String? = null
+    @SerialName("language_code") val languageCode: String? = null,
+    @SerialName("is_premium") val isPremium: Boolean = false
 ) : Sender() {
     object Serializer : KSerializer<User> {
         override val descriptor = buildClassSerialDescriptor("User") {
@@ -37,6 +38,7 @@ data class User(
             element<String>("first_name")
             element<String?>("last_name")
             element<String?>("language_code")
+            element<Boolean?>("is_premium")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
@@ -46,6 +48,7 @@ data class User(
             var firstName: String? = null
             var lastName: String? = null
             var languageCode: String? = null
+            var isPremium: Boolean = false
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> isBot = decodeBooleanElement(descriptor, 0)
@@ -54,6 +57,7 @@ data class User(
                     3 -> firstName = decodeStringElement(descriptor, 3)
                     4 -> lastName = decodeStringElement(descriptor, 4)
                     5 -> languageCode = decodeStringElement(descriptor, 5)
+                    6 -> isPremium = decodeBooleanElement(descriptor, 6)
                     CompositeDecoder.DECODE_DONE -> break
                     else -> error("Unexpected index: $index")
                 }
@@ -61,18 +65,19 @@ data class User(
             check(!isBot) { "Not a User!" }
             requireNotNull(id)
             requireNotNull(firstName)
-            User(id, username, firstName, lastName, languageCode)
+            User(id, username, firstName, lastName, languageCode, isPremium)
         }
 
         override fun serialize(encoder: Encoder, value: User) {
             encoder.encodeStructure(descriptor) {
-                val (id, username, firstName, lastName, languageCode) = value
+                val (id, username, firstName, lastName, languageCode, isPremium) = value
                 encodeBooleanElement(descriptor, 0, false)
                 encodeLongElement(descriptor, 1, id)
                 if (username != null) encodeStringElement(descriptor, 2, username)
                 encodeStringElement(descriptor, 3, firstName)
                 if (lastName != null) encodeStringElement(descriptor, 4, lastName)
                 if (languageCode != null) encodeStringElement(descriptor, 5, languageCode)
+                if (isPremium) encodeBooleanElement(descriptor, 6, true)
             }
         }
     }

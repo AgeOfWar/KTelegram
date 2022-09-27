@@ -61,11 +61,11 @@ sealed class Message : Id<Long> {
                 "migrate_from_chat_id" in json -> MigrateFromChatIdMessage.serializer()
                 "pinned_message" in json -> PinnedMessageMessage.serializer()
                 "proximity_alert_triggered" in json -> ProximityAlertTriggeredMessage.serializer()
-                "voice_chat_started" in json -> VoiceChatStartedMessage.serializer()
-                "voice_chat_ended" in json -> VoiceChatEndedMessage.serializer()
-                "voice_chat_participants_invited" in json -> VoiceChatParticipantsInvitedMessage.serializer()
+                "video_chat_started" in json -> VideoChatStartedMessage.serializer()
+                "video_chat_ended" in json -> VideoChatEndedMessage.serializer()
+                "video_chat_participants_invited " in json -> VideoChatParticipantsInvitedMessage.serializer()
                 "message_auto_delete_timer_changed" in json -> MessageAutoDeleteTimerChangedMessage.serializer()
-                "voice_chat_scheduled" in json -> VoiceChatScheduledMessage.serializer()
+                "video_chat_scheduled" in json -> VideoChatScheduledMessage.serializer()
                 "invoice" in json -> InvoiceMessage.serializer()
                 "successful_payment" in json -> SuccessfulPaymentMessage.serializer()
                 else -> UnknownMessage.serializer()
@@ -233,6 +233,7 @@ data class TextMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -437,6 +438,7 @@ data class AnimationMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -642,6 +644,7 @@ data class AudioMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -844,6 +847,7 @@ data class DocumentMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -1046,6 +1050,7 @@ data class PhotoMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -1235,6 +1240,7 @@ data class StickerMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -1433,6 +1439,7 @@ data class VideoMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -1622,6 +1629,7 @@ data class VideoNoteMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -1813,6 +1821,7 @@ data class VoiceMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -2002,6 +2011,7 @@ data class ContactMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -2178,6 +2188,7 @@ data class DiceMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -2352,6 +2363,7 @@ data class GameMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -2548,6 +2560,7 @@ data class PollMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -2725,6 +2738,7 @@ data class VenueMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -2902,6 +2916,7 @@ data class LocationMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -3876,14 +3891,19 @@ data class ProximityAlertTriggeredMessage(
     }
 }
 
-@Serializable(VoiceChatStartedMessage.Serializer::class)
-data class VoiceChatStartedMessage(
+@Deprecated("Use VideoChatStartedMessage", ReplaceWith("VideoChatStartedMessage"))
+typealias VoiceChatStartedMessage = VideoChatStartedMessage
+
+@Serializable(VideoChatStartedMessage.Serializer::class)
+data class VideoChatStartedMessage(
     override val id: Long,
     override val sender: Sender,
     override val date: Long = 0L,
     override val chat: Chat,
-    val voiceChatStarted: VoiceChatStarted
+    @Deprecated("Use videoChatStarted", ReplaceWith("videoChatStarted")) val voiceChatStarted: VideoChatStarted
 ) : Message() {
+    val videoChatStarted get() = voiceChatStarted
+
     override val replyToMessage: Nothing? get() = null
     override val lastEditDate: Nothing? get() = null
     override val viaBot: Nothing? get() = null
@@ -3898,10 +3918,10 @@ data class VoiceChatStartedMessage(
 
     override fun toMessageContent(): Nothing? = null
 
-    object Serializer : KSerializer<VoiceChatStartedMessage> {
-        override val descriptor = buildClassSerialDescriptor("VoiceChatStartedMessage") {
+    object Serializer : KSerializer<VideoChatStartedMessage> {
+        override val descriptor = buildClassSerialDescriptor("VideoChatStartedMessage") {
             messageElements()
-            element<VoiceChatStarted>("voice_chat_started")
+            element<VideoChatStarted>("video_chat_started")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
@@ -3909,7 +3929,7 @@ data class VoiceChatStartedMessage(
             var sender: Sender? = null
             var date: Long = 0L
             var chat: Chat? = null
-            var voiceChatStarted: VoiceChatStarted? = null
+            var voiceChatStarted: VideoChatStarted? = null
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> id = decodeLongElement(descriptor, 0)
@@ -3922,7 +3942,7 @@ data class VoiceChatStartedMessage(
                     17 -> voiceChatStarted = decodeSerializableElement(
                         descriptor,
                         17,
-                        VoiceChatStarted.serializer(),
+                        VideoChatStarted.serializer(),
                         voiceChatStarted
                     )
                     CompositeDecoder.DECODE_DONE -> break
@@ -3933,10 +3953,10 @@ data class VoiceChatStartedMessage(
             requireNotNull(sender)
             requireNotNull(chat)
             requireNotNull(voiceChatStarted)
-            VoiceChatStartedMessage(id, sender, date, chat, voiceChatStarted)
+            VideoChatStartedMessage(id, sender, date, chat, voiceChatStarted)
         }
 
-        override fun serialize(encoder: Encoder, value: VoiceChatStartedMessage) {
+        override fun serialize(encoder: Encoder, value: VideoChatStartedMessage) {
             encoder.encodeStructure(descriptor) {
                 val (id, sender, date, chat, voiceChatStarted) = value
                 encodeLongElement(descriptor, 0, id)
@@ -3954,7 +3974,7 @@ data class VoiceChatStartedMessage(
                 encodeSerializableElement(
                     descriptor,
                     17,
-                    VoiceChatStarted.serializer(),
+                    VideoChatStarted.serializer(),
                     voiceChatStarted
                 )
             }
@@ -3962,14 +3982,19 @@ data class VoiceChatStartedMessage(
     }
 }
 
-@Serializable(VoiceChatEndedMessage.Serializer::class)
-data class VoiceChatEndedMessage(
+@Deprecated("Use VideoChatEndedMessage", ReplaceWith("VideoChatEndedMessage"))
+typealias VoiceChatEndedMessage = VideoChatEndedMessage
+
+@Serializable(VideoChatEndedMessage.Serializer::class)
+data class VideoChatEndedMessage(
     override val id: Long,
     override val sender: Sender,
     override val date: Long = 0L,
     override val chat: Chat,
-    val voiceChatEnded: VoiceChatEnded
+    @Deprecated("Use videoChatEnded", ReplaceWith("videoChatEnded")) val voiceChatEnded: VideoChatEnded
 ) : Message() {
+    val videoChatEnded get() = voiceChatEnded
+
     override val replyToMessage: Nothing? get() = null
     override val lastEditDate: Nothing? get() = null
     override val viaBot: Nothing? get() = null
@@ -3984,10 +4009,10 @@ data class VoiceChatEndedMessage(
 
     override fun toMessageContent(): Nothing? = null
 
-    object Serializer : KSerializer<VoiceChatEndedMessage> {
-        override val descriptor = buildClassSerialDescriptor("VoiceChatEndedMessage") {
+    object Serializer : KSerializer<VideoChatEndedMessage> {
+        override val descriptor = buildClassSerialDescriptor("VideoChatEndedMessage") {
             messageElements()
-            element<VoiceChatEnded>("voice_chat_ended")
+            element<VideoChatEnded>("video_chat_ended")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
@@ -3995,7 +4020,7 @@ data class VoiceChatEndedMessage(
             var sender: Sender? = null
             var date: Long = 0L
             var chat: Chat? = null
-            var voiceChatEnded: VoiceChatEnded? = null
+            var voiceChatEnded: VideoChatEnded? = null
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> id = decodeLongElement(descriptor, 0)
@@ -4008,7 +4033,7 @@ data class VoiceChatEndedMessage(
                     17 -> voiceChatEnded = decodeSerializableElement(
                         descriptor,
                         17,
-                        VoiceChatEnded.serializer(),
+                        VideoChatEnded.serializer(),
                         voiceChatEnded
                     )
                     CompositeDecoder.DECODE_DONE -> break
@@ -4019,10 +4044,10 @@ data class VoiceChatEndedMessage(
             requireNotNull(sender)
             requireNotNull(chat)
             requireNotNull(voiceChatEnded)
-            VoiceChatEndedMessage(id, sender, date, chat, voiceChatEnded)
+            VideoChatEndedMessage(id, sender, date, chat, voiceChatEnded)
         }
 
-        override fun serialize(encoder: Encoder, value: VoiceChatEndedMessage) {
+        override fun serialize(encoder: Encoder, value: VideoChatEndedMessage) {
             encoder.encodeStructure(descriptor) {
                 val (id, sender, date, chat, voiceChatEnded) = value
                 encodeLongElement(descriptor, 0, id)
@@ -4040,7 +4065,7 @@ data class VoiceChatEndedMessage(
                 encodeSerializableElement(
                     descriptor,
                     17,
-                    VoiceChatEnded.serializer(),
+                    VideoChatEnded.serializer(),
                     voiceChatEnded
                 )
             }
@@ -4048,14 +4073,19 @@ data class VoiceChatEndedMessage(
     }
 }
 
-@Serializable(VoiceChatParticipantsInvitedMessage.Serializer::class)
-data class VoiceChatParticipantsInvitedMessage(
+@Deprecated("Use VideoChatParticipantsInvitedMessage", ReplaceWith("VideoChatParticipantsInvitedMessage"))
+typealias VoiceChatParticipantsInvitedMessage = VideoChatParticipantsInvitedMessage
+
+@Serializable(VideoChatParticipantsInvitedMessage.Serializer::class)
+data class VideoChatParticipantsInvitedMessage(
     override val id: Long,
     override val sender: Sender,
     override val date: Long = 0L,
     override val chat: Chat,
-    val voiceChatParticipantsInvited: VoiceChatParticipantsInvited
+    @Deprecated("Use videoChatParticipantsInvited", ReplaceWith("videoChatParticipantsInvited")) val voiceChatParticipantsInvited: VideoChatParticipantsInvited
 ) : Message() {
+    val videoChatParticipantsInvited get() = voiceChatParticipantsInvited
+
     override val replyToMessage: Nothing? get() = null
     override val lastEditDate: Nothing? get() = null
     override val viaBot: Nothing? get() = null
@@ -4070,10 +4100,10 @@ data class VoiceChatParticipantsInvitedMessage(
 
     override fun toMessageContent(): Nothing? = null
 
-    object Serializer : KSerializer<VoiceChatParticipantsInvitedMessage> {
-        override val descriptor = buildClassSerialDescriptor("VoiceChatParticipantsInvitedMessage") {
+    object Serializer : KSerializer<VideoChatParticipantsInvitedMessage> {
+        override val descriptor = buildClassSerialDescriptor("VideoChatParticipantsInvitedMessage") {
             messageElements()
-            element<VoiceChatParticipantsInvited>("voice_chat_participants_invited")
+            element<VideoChatParticipantsInvited>("video_chat_participants_invited")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
@@ -4081,7 +4111,7 @@ data class VoiceChatParticipantsInvitedMessage(
             var sender: Sender? = null
             var date: Long = 0L
             var chat: Chat? = null
-            var voiceChatParticipantsInvited: VoiceChatParticipantsInvited? = null
+            var voiceChatParticipantsInvited: VideoChatParticipantsInvited? = null
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> id = decodeLongElement(descriptor, 0)
@@ -4094,7 +4124,7 @@ data class VoiceChatParticipantsInvitedMessage(
                     17 -> voiceChatParticipantsInvited = decodeSerializableElement(
                         descriptor,
                         17,
-                        VoiceChatParticipantsInvited.serializer(),
+                        VideoChatParticipantsInvited.serializer(),
                         voiceChatParticipantsInvited
                     )
                     CompositeDecoder.DECODE_DONE -> break
@@ -4105,10 +4135,10 @@ data class VoiceChatParticipantsInvitedMessage(
             requireNotNull(sender)
             requireNotNull(chat)
             requireNotNull(voiceChatParticipantsInvited)
-            VoiceChatParticipantsInvitedMessage(id, sender, date, chat, voiceChatParticipantsInvited)
+            VideoChatParticipantsInvitedMessage(id, sender, date, chat, voiceChatParticipantsInvited)
         }
 
-        override fun serialize(encoder: Encoder, value: VoiceChatParticipantsInvitedMessage) {
+        override fun serialize(encoder: Encoder, value: VideoChatParticipantsInvitedMessage) {
             encoder.encodeStructure(descriptor) {
                 val (id, sender, date, chat, voiceChatParticipantsInvited) = value
                 encodeLongElement(descriptor, 0, id)
@@ -4126,7 +4156,7 @@ data class VoiceChatParticipantsInvitedMessage(
                 encodeSerializableElement(
                     descriptor,
                     17,
-                    VoiceChatParticipantsInvited.serializer(),
+                    VideoChatParticipantsInvited.serializer(),
                     voiceChatParticipantsInvited
                 )
             }
@@ -4220,14 +4250,19 @@ data class MessageAutoDeleteTimerChangedMessage(
     }
 }
 
-@Serializable(MessageAutoDeleteTimerChangedMessage.Serializer::class)
-data class VoiceChatScheduledMessage(
+@Deprecated("Use VideoChatScheduledMessage", ReplaceWith("VideoChatScheduledMessage"))
+typealias VoiceChatScheduledMessage = VideoChatScheduledMessage
+
+@Serializable(VideoChatScheduledMessage.Serializer::class)
+data class VideoChatScheduledMessage(
     override val id: Long,
     override val sender: Sender,
     override val date: Long = 0L,
     override val chat: Chat,
-    val voiceChatScheduled: VoiceChatScheduled
+    @Deprecated("Use videoChatScheduled", ReplaceWith("videoChatScheduled")) val voiceChatScheduled: VideoChatScheduled
 ) : Message() {
+    val videoChatScheduled get() = voiceChatScheduled
+
     override val replyToMessage: Nothing? get() = null
     override val lastEditDate: Nothing? get() = null
     override val viaBot: Nothing? get() = null
@@ -4242,10 +4277,10 @@ data class VoiceChatScheduledMessage(
 
     override fun toMessageContent(): Nothing? = null
 
-    object Serializer : KSerializer<VoiceChatScheduledMessage> {
-        override val descriptor = buildClassSerialDescriptor("VoiceChatScheduledMessage") {
+    object Serializer : KSerializer<VideoChatScheduledMessage> {
+        override val descriptor = buildClassSerialDescriptor("VideoChatScheduledMessage") {
             messageElements()
-            element<VoiceChatScheduled>("voice_chat_scheduled")
+            element<VideoChatScheduled>("video_chat_scheduled")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
@@ -4253,7 +4288,7 @@ data class VoiceChatScheduledMessage(
             var sender: Sender? = null
             var date: Long = 0L
             var chat: Chat? = null
-            var voiceChatScheduled: VoiceChatScheduled? = null
+            var voiceChatScheduled: VideoChatScheduled? = null
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> id = decodeLongElement(descriptor, 0)
@@ -4266,7 +4301,7 @@ data class VoiceChatScheduledMessage(
                     17 -> voiceChatScheduled = decodeSerializableElement(
                         descriptor,
                         17,
-                        VoiceChatScheduled.serializer(),
+                        VideoChatScheduled.serializer(),
                         voiceChatScheduled
                     )
                     CompositeDecoder.DECODE_DONE -> break
@@ -4277,10 +4312,10 @@ data class VoiceChatScheduledMessage(
             requireNotNull(sender)
             requireNotNull(chat)
             requireNotNull(voiceChatScheduled)
-            VoiceChatScheduledMessage(id, sender, date, chat, voiceChatScheduled)
+            VideoChatScheduledMessage(id, sender, date, chat, voiceChatScheduled)
         }
 
-        override fun serialize(encoder: Encoder, value: VoiceChatScheduledMessage) {
+        override fun serialize(encoder: Encoder, value: VideoChatScheduledMessage) {
             encoder.encodeStructure(descriptor) {
                 val (id, sender, date, chat, voiceChatScheduled) = value
                 encodeLongElement(descriptor, 0, id)
@@ -4298,7 +4333,7 @@ data class VoiceChatScheduledMessage(
                 encodeSerializableElement(
                     descriptor,
                     17,
-                    VoiceChatScheduled.serializer(),
+                    VideoChatScheduled.serializer(),
                     voiceChatScheduled
                 )
             }
@@ -4456,6 +4491,7 @@ data class InvoiceMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,
@@ -4710,6 +4746,7 @@ data class UnknownMessage(
                         Sender.serializer(),
                         forwardFrom
                     )
+                    else -> {}
                 }
                 if (forwardFromMessageId != null) encodeLongElement(
                     descriptor,

@@ -204,6 +204,7 @@ suspend inline fun Update.handleChatJoinRequest(api: TelegramApi, block: (ChatJo
         when (block(chatJoinRequest)) {
             true -> api.approveChatJoinRequest(chatJoinRequest.chat.chatId, chatJoinRequest.sender.id)
             false -> api.declineChatJoinRequest(chatJoinRequest.chat.chatId, chatJoinRequest.sender.id)
+            else -> {}
         }
     }
 }

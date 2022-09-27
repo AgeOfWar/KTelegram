@@ -1,7 +1,7 @@
 package com.github.ageofwar.ktelegram
 
 import com.github.ageofwar.ktelegram.json.json
-import io.ktor.client.features.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.utils.io.core.*
@@ -130,8 +130,8 @@ data class Currency(
                     it.get("https://core.telegram.org/bots/payments/currencies.json")
                 }
             }  catch (e: ClientRequestException) {
-                e.response.readText()
-            }
+                e.response
+            }.bodyAsText()
             return try {
                 currencies += json.decodeFromString<Map<String, Currency>>(response)
             } catch (e: Throwable) {
