@@ -114,13 +114,15 @@ suspend fun <T : Message> TelegramApi.sendMessage(
     replyToMessageId: Long? = null,
     replyMarkup: ReplyMarkup? = null,
     disableNotification: Boolean = false,
-    allowSendingWithoutReply: Boolean = true
+    allowSendingWithoutReply: Boolean = true,
+    messageThreadId: Long? = null
 ): T {
     val parameters = mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "disable_notification" to disableNotification,
         "reply_to_message_id" to replyToMessageId,
         "allow_sending_without_reply" to allowSendingWithoutReply,
+        "message_thread_id" to messageThreadId,
         "reply_markup" to replyMarkup?.toJson()
     )
     @Suppress("UNCHECKED_CAST")
@@ -315,13 +317,15 @@ suspend fun TelegramApi.forwardMessage(
     chatId: ChatId,
     fromChatId: ChatId,
     messageId: Long,
-    disableNotification: Boolean = false
+    disableNotification: Boolean = false,
+    messageThreadId: Long? = null
 ) = call<Message>(
     "forwardMessage", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
         "from_chat_id" to (fromChatId.id ?: chatId.username),
         "message_id" to messageId,
-        "disable_notification" to disableNotification
+        "disable_notification" to disableNotification,
+        "message_thread_id" to messageThreadId,
     )
 )
 
@@ -364,7 +368,8 @@ suspend fun TelegramApi.copyMessage(
     replyToMessageId: Long? = null,
     disableNotification: Boolean = false,
     allowSendingWithoutReply: Boolean = true,
-    replyMarkup: ReplyMarkup? = null
+    replyMarkup: ReplyMarkup? = null,
+    messageThreadId: Long? = null
 ) = call<JsonObject>(
     "copyMessage", mapOf(
         "chat_id" to (chatId.id ?: chatId.username),
@@ -375,7 +380,8 @@ suspend fun TelegramApi.copyMessage(
         "reply_to_message_id" to replyToMessageId,
         "disable_notification" to disableNotification,
         "allow_sending_without_reply" to allowSendingWithoutReply,
-        "reply_markup" to replyMarkup?.toJson()
+        "reply_markup" to replyMarkup?.toJson(),
+        "message_thread_id" to messageThreadId,
     )
 )["message_id"]?.jsonPrimitive?.long ?: throw SerializationException()
 
@@ -384,13 +390,15 @@ suspend fun TelegramApi.sendMediaGroup(
     media: List<OutputMedia>,
     disableNotification: Boolean = false,
     replyToMessageId: Long? = null,
-    allowSendingWithoutReply: Boolean = true
+    allowSendingWithoutReply: Boolean = true,
+    messageThreadId: Long? = null
 ) = call<List<Message>>("sendMediaGroup", mapOf(
     "chat_id" to (chatId.id ?: chatId.username),
     "media" to media.toJson(),
     "disable_notification" to disableNotification,
     "reply_to_message_id" to replyToMessageId,
-    "allow_sending_without_reply" to allowSendingWithoutReply
+    "allow_sending_without_reply" to allowSendingWithoutReply,
+    "message_thread_id" to messageThreadId,
 ), media.mapNotNull { it.media.fileName?.to(it.media) }.toMap())
 
 suspend fun TelegramApi.sendMediaGroup(
@@ -566,7 +574,7 @@ suspend fun TelegramApi.restrictChatMember(
 suspend fun TelegramApi.promoteChatMember(
     chatId: ChatId,
     userId: Long,
-    permissions: AdminPermissions,
+    permissions: ChatAdministratorRights,
     untilDate: Int? = null
 ) {
     call<Boolean>(
@@ -584,7 +592,8 @@ suspend fun TelegramApi.promoteChatMember(
             "can_pin_messages" to permissions.canPinMessages,
             "can_promote_members" to permissions.canPromoteMembers,
             "can_manage_voice_chats" to permissions.canManageVoiceChats,
-            "can_manage_chat" to permissions.canManageChat
+            "can_manage_chat" to permissions.canManageChat,
+            "can_manage_topics" to permissions.canManageTopics
         )
     )
 }
@@ -1341,5 +1350,67 @@ suspend fun TelegramApi.createInvoiceLink(invoice: InvoiceContent) =
             "is_flexible" to invoice.flexible
         )
     )
+
+suspend fun TelegramApi.createForumTopic(chatId: ChatId, name: String, iconColor: Int? = null, iconCustomEmojiId: String? = null) =
+    call<ForumTopic>(
+        "createForumTopic", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "name" to name,
+            "icon_color" to iconColor,
+            "icon_custom_emoji_id" to iconCustomEmojiId
+        )
+    )
+
+suspend fun TelegramApi.editForumTopic(chatId: ChatId, messageThreadId: Long, name: String, iconCustomEmojiId: String? = null) {
+    call<Boolean>(
+        "editForumTopic", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "message_thread_id" to messageThreadId,
+            "name" to name,
+            "icon_custom_emoji_id" to iconCustomEmojiId
+        )
+    )
+}
+
+suspend fun TelegramApi.closeForumTopic(chatId: ChatId, messageThreadId: Long) {
+    call<Boolean>(
+        "closeForumTopic", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "message_thread_id" to messageThreadId
+        )
+    )
+}
+
+suspend fun TelegramApi.reopenForumTopic(chatId: ChatId, messageThreadId: Long) {
+    call<Boolean>(
+        "reopenForumTopic", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "message_thread_id" to messageThreadId
+        )
+    )
+}
+
+suspend fun TelegramApi.deleteForumTopic(chatId: ChatId, messageThreadId: Long) {
+    call<Boolean>(
+        "deleteForumTopic", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "message_thread_id" to messageThreadId
+        )
+    )
+}
+
+suspend fun TelegramApi.getForumTopicIconStickers() =
+    call<List<Sticker>>(
+        "getForumTopicIconStickers", mapOf()
+    )
+
+suspend fun TelegramApi.unpinAllForumTopicMessages(chatId: ChatId, messageThreadId: Long) {
+    call<Boolean>(
+        "unpinAllForumTopicMessages", mapOf(
+            "chat_id" to (chatId.id ?: chatId.username),
+            "message_thread_id" to messageThreadId
+        )
+    )
+}
 
 private inline fun <reified T : Any> T.toJson() = json.encodeToString(this)

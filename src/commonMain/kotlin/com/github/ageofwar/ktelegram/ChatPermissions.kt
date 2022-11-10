@@ -13,6 +13,7 @@ data class ChatPermissions(
     @SerialName("can_change_info") val canChangeInfo: Boolean = false,
     @SerialName("can_invite_users") val canInviteUsers: Boolean = false,
     @SerialName("can_pin_messages") val canPinMessages: Boolean = false,
+    @SerialName("can_manage_topics") val canManageTopics: Boolean = false
 )
 
 @Deprecated("Use ChatAdministratorRights instead", ReplaceWith("ChatAdministratorRights"))
@@ -30,5 +31,6 @@ data class ChatAdministratorRights(
     @SerialName("can_restrict_members") val canRestrictMembers: Boolean = false,
     @SerialName("can_pin_messages") val canPinMessages: Boolean = false,
     @SerialName("can_promote_members") val canPromoteMembers: Boolean = false,
-    @SerialName("can_manage_video_chats") val canManageVoiceChats: Boolean = false
+    @SerialName("can_manage_video_chats") val canManageVoiceChats: Boolean = false,
+    @SerialName("can_manage_topics") val canManageTopics: Boolean = false
 )

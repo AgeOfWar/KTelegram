@@ -27,7 +27,8 @@ data class Group(
 data class Supergroup(
     override val id: Long,
     override val username: String? = null,
-    override val title: String
+    override val title: String,
+    @SerialName("is_forum") val isForum: Boolean = false
 ) : Chat(), Username, Title
 
 @Serializable

@@ -11,6 +11,7 @@ sealed class DetailedChat : Id<Long> {
     abstract val permissions: ChatPermissions
     abstract val stickerSetName: String?
     abstract val canSetStickerSet: Boolean
+    abstract val activeUsernames: List<String>
 }
 
 @Serializable
@@ -23,7 +24,9 @@ data class DetailedPrivateChat(
     @SerialName("chat_photo") override val chatPhoto: ChatPhoto? = null,
     val bio: String? = null,
     @SerialName("has_private_forwards") val hasPrivateForwards: Boolean = false,
-    @SerialName("has_restricted_voice_and_video_messages") val hasRestrictedVoiceAndVideoMessages: Boolean = false
+    @SerialName("has_restricted_voice_and_video_messages") val hasRestrictedVoiceAndVideoMessages: Boolean = false,
+    @SerialName("active_usernames") override val activeUsernames: List<String> = emptyList(),
+    @SerialName("emoji_status_custom_emoji_id") val emojiStatusCustomEmojiId: String? = null
 ) : DetailedChat(), Username, Name {
     override val inviteLink: Nothing? get() = null
     override val pinnedMessage: Nothing? get() = null
@@ -53,7 +56,8 @@ data class DetailedGroup(
     @SerialName("pinned_message") override val pinnedMessage: Message? = null,
     override val permissions: ChatPermissions,
     @SerialName("sticker_set_name") override val stickerSetName: String? = null,
-    @SerialName("can_set_sticker_set") override val canSetStickerSet: Boolean
+    @SerialName("can_set_sticker_set") override val canSetStickerSet: Boolean,
+    @SerialName("active_usernames") override val activeUsernames: List<String> = emptyList()
 ) : DetailedChat(), Title, Description
 
 @Serializable
@@ -62,6 +66,7 @@ data class DetailedSupergroup(
     override val id: Long,
     override val username: String? = null,
     override val title: String,
+    @SerialName("is_forum") val isForum: Boolean = false,
     @SerialName("chat_photo") override val chatPhoto: ChatPhoto? = null,
     override val description: String? = null,
     @SerialName("invite_link") override val inviteLink: String? = null,
@@ -73,7 +78,8 @@ data class DetailedSupergroup(
     @SerialName("linked_chat_id") val linkedChatId: Long? = null,
     val location: ChatLocation? = null,
     @SerialName("join_to_send_messages") val joinToSendMessages: Boolean = false,
-    @SerialName("join_by_request") val joinByRequest: Boolean = false
+    @SerialName("join_by_request") val joinByRequest: Boolean = false,
+    @SerialName("active_usernames") override val activeUsernames: List<String> = emptyList()
 ) : DetailedChat(), Username, Title, Description
 
 @Serializable
@@ -86,7 +92,8 @@ data class DetailedChannel(
     override val description: String? = null,
     @SerialName("invite_link") override val inviteLink: String? = null,
     @SerialName("pinned_message") override val pinnedMessage: Message? = null,
-    @SerialName("linked_chat_id") val linkedChatId: Long? = null
+    @SerialName("linked_chat_id") val linkedChatId: Long? = null,
+    @SerialName("active_usernames") override val activeUsernames: List<String> = emptyList()
 ) : DetailedChat(), Username, Title, Description {
     override val stickerSetName: Nothing? get() = null
     override val canSetStickerSet get() = false
@@ -112,5 +119,5 @@ fun DetailedChat.toChat() = when (this) {
 
 fun DetailedPrivateChat.toPrivateChat() = PrivateChat(id, username, firstName, lastName)
 fun DetailedGroup.toGroup() = Group(id, title)
-fun DetailedSupergroup.toSupergroup() = Supergroup(id, username, title)
+fun DetailedSupergroup.toSupergroup() = Supergroup(id, username, title, isForum)
 fun DetailedChannel.toChannel() = Channel(id, username, title)

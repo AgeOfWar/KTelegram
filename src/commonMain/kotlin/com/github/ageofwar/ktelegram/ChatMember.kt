@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-@Serializable(with = ChatMember.Serializer::class)
+@Serializable(ChatMember.Serializer::class)
 sealed class ChatMember {
     abstract val sender: Sender
 
@@ -38,7 +38,7 @@ data class Creator(
     private val status = "creator"
 }
 
-@Serializable(with = Administrator.Serializer::class)
+@Serializable(Administrator.Serializer::class)
 data class Administrator(
     @SerialName("user") override val sender: Sender,
     @SerialName("custom_title") val customTitle: String? = null,
@@ -65,12 +65,13 @@ data class Administrator(
             element<Boolean?>("can_promote_members")
             element<Boolean?>("can_manage_voice_chats")
             element<Boolean?>("can_manage_chat")
+            element<Boolean?>("can_manage_topics")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
             var sender: Sender? = null
             var customTitle: String? = null
-            var canBeEdited: Boolean? = null
+            var canBeEdited = false
             var isAnonymous = false
             var canChangeInfo = false
             var canPostMessages = false
@@ -82,6 +83,7 @@ data class Administrator(
             var canPromoteMembers = false
             var canManageVoiceChats = false
             var canManageChat = false
+            var canManageTopics = false
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> check(decodeStringElement(descriptor, 0) == "administrator") {
@@ -102,17 +104,17 @@ data class Administrator(
                     12 -> canPromoteMembers = decodeBooleanElement(descriptor, 12)
                     13 -> canManageVoiceChats = decodeBooleanElement(descriptor, 13)
                     14 -> canManageChat = decodeBooleanElement(descriptor, 14)
+                    15 -> canManageTopics = decodeBooleanElement(descriptor, 15)
                     CompositeDecoder.DECODE_DONE -> break
                     else -> error("Unexpected index: $index")
                 }
             }
             requireNotNull(sender)
-            requireNotNull(canBeEdited)
             Administrator(
                 sender,
                 customTitle,
                 canBeEdited,
-                AdminPermissions(
+                ChatAdministratorRights(
                     isAnonymous,
                     canManageChat,
                     canChangeInfo,
@@ -124,6 +126,7 @@ data class Administrator(
                     canPinMessages,
                     canPromoteMembers,
                     canManageVoiceChats,
+                    canManageTopics
                 )
             )
         }
@@ -156,7 +159,7 @@ data class Member(
     private val status = "member"
 }
 
-@Serializable(with = Restricted.Serializer::class)
+@Serializable(Restricted.Serializer::class)
 data class Restricted(
     @SerialName("user") override val sender: Sender,
     @SerialName("is_member") val isMember: Boolean,
@@ -180,11 +183,12 @@ data class Restricted(
             element<Boolean?>("can_invite_users",)
             element<Boolean?>("can_pin_messages")
             element<Int?>("until_date")
+            element<Boolean?>("can_manage_topics")
         }
 
         override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
             var sender: Sender? = null
-            var isMember: Boolean? = null
+            var isMember = false
             var canSendMessage = false
             var canSendMediaMessages = false
             var canSendPolls = false
@@ -194,6 +198,7 @@ data class Restricted(
             var canInviteUsers = false
             var canPinMessages = false
             var untilDate: Int? = null
+            var canManageTopics = false
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> check(decodeStringElement(descriptor, 0) == "restricted") {
@@ -211,12 +216,12 @@ data class Restricted(
                     9 -> canInviteUsers = decodeBooleanElement(descriptor, 9)
                     10 -> canPinMessages = decodeBooleanElement(descriptor, 10)
                     11 -> untilDate = decodeIntElement(descriptor, 11)
+                    12 -> canManageTopics = decodeBooleanElement(descriptor, 12)
                     CompositeDecoder.DECODE_DONE -> break
                     else -> error("Unexpected index: $index")
                 }
             }
             requireNotNull(sender)
-            requireNotNull(isMember)
             Restricted(
                 sender,
                 isMember,
@@ -228,7 +233,8 @@ data class Restricted(
                     canAddWebPagePreviews,
                     canChangeInfo,
                     canInviteUsers,
-                    canPinMessages
+                    canPinMessages,
+                    canManageTopics
                 ),
                 untilDate
             )
